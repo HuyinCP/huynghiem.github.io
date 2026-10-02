@@ -1,0 +1,13 @@
+title: Huy
+description: Huy's personal blog, projects, and notes.
+lang: en
+url: "https://huyincp.github.io"
+baseurl: "/GitHubIO"
+permalink: /blog/:title/
+markdown: kramdown
+plugins:
+  - jekyll-feed
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
