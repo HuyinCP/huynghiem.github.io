@@ -1,26 +1,30 @@
 # Personal blog
 
-A personal website built with Jekyll and hosted on GitHub Pages.
+This is a plain HTML, CSS, and JavaScript website inspired by the layout of [codingowen.github.io](https://codingowen.github.io/). **`index.html` is the starting page.** The layout was written for this site; the reference site's source code, photo, and article text were not copied.
 
-## Publish the website
+## Preview on your computer
 
-The current repository is `HuyinCP/GitHubIO`, so the default address is **https://huyincp.github.io/GitHubIO/**.
+Open `index.html` in a browser. For automatic refresh while editing, install the **Live Server** extension in VS Code, then right-click `index.html` and choose **Open with Live Server**. If that menu item is missing, the extension is not installed or enabled.
+
+## Edit the site
+
+- Homepage and introduction: `index.html`
+- Profile photo: replace `assets/images/profile-placeholder.svg` with your own image and update its path in `index.html`.
+- Projects: `projects.html`
+- Project image: replace `assets/images/project-placeholder.svg` with your own image and update its path in `projects.html`.
+- Blog list: `blogs.html`
+- Knowledge Graph: `knowledge_graph.html`
+- Sample article: `blog/welcome.html`
+- Colors and layout: `assets/css/style.css`
+
+To add an article, copy `blog/welcome.html`, edit the new file, add a link in `blogs.html`, and add its title, URL, and topics to the `graph-data` JSON in `knowledge_graph.html`.
+
+## Publish with GitHub Pages
+
+The current repository is `HuyinCP/GitHubIO`, so its GitHub Pages address will be **https://huyincp.github.io/GitHubIO/**.
 
 1. Push these files to the `main` branch.
-2. In the repository, open **Settings → Pages**.
-3. Under **Build and deployment**, select **Source: Deploy from a branch**.
-4. Select **Branch: main** and **/(root)**, then click **Save**.
-5. Wait a few minutes and visit the address above.
+2. Open **Settings → Pages** in the GitHub repository.
+3. Select **Deploy from a branch**, branch **main**, folder **/(root)**, then click **Save**.
 
-If you rename the repository to `HuyinCP.github.io`, change the setting to `baseurl: ""` in `_config.yml`. The site address will then be `https://huyincp.github.io/`.
-
-## Edit the content
-
-- Site title and description: `_config.yml`.
-- Introduction: `index.md`.
-- Projects: `projects.md`.
-- Knowledge Graph: `knowledge_graph.md`. It displays topics from the `tags` in your blog posts.
-- Blog posts: create a file in `_posts` named `YYYY-MM-DD-post-title.md`; use the sample post as a guide. Add `tags: [Topic Name]` to include it in the Knowledge Graph.
-- Colors and layout: `assets/css/style.css`.
-
-For a local preview (optional), install Ruby and Bundler, then run `bundle install` and `bundle exec jekyll serve`. You can also edit files directly on GitHub; Pages will rebuild the site after each update.
+If you rename the repository to `HuyinCP.github.io`, the site address becomes `https://huyincp.github.io/`. The relative links in this site work with either address.

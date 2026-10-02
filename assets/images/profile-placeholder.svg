@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 420" role="img" aria-label="Add your own portrait">
+  <rect width="560" height="420" fill="#e7e7e7"/>
+  <circle cx="280" cy="168" r="66" fill="#b8b8b8"/>
+  <path d="M132 375c20-94 80-142 148-142s128 48 148 142" fill="#b8b8b8"/>
+  <text x="280" y="405" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" fill="#555">REPLACE WITH YOUR PHOTO</text>
+</svg>
