@@ -43,6 +43,7 @@ a:focus-visible { outline: 2px solid #6e50a7; outline-offset: 3px; }
 .figure-placeholder > div { min-height: 210px; display: grid; place-items: center; color: #777; background: #f5f5f5; border: 1px dashed #aaa; }
 .article pre { overflow-x: auto; margin: 28px 0; padding: 18px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; line-height: 1.55; }
 .article code { font-family: Consolas, "Liberation Mono", monospace; }
+.equation-block { margin: 20px 0; overflow-x: auto; overflow-y: hidden; }
 .article mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 8px 0; }
 .graph-wrap { width: 100%; }
 .graph-page { width: 100%; min-height: calc(100vh - 55px); }
