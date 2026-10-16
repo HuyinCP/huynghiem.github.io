@@ -196,44 +196,426 @@ Next, let’s learn how backpropagation is performed in RNNs.
 
 <h3 id="backward">2.2. Backpropagation Through Time</h3>
 
-Using cross-entropy, the total loss over a sequence of length $T$ can be written as:
+Before we go into the details of backpropagation, we must first define the loss function we’re optimizing for.
 
-<div class="equation-block" role="math" aria-label="Sequence loss equation">
-  \[
-    \mathcal{L} = -\sum_{t=1}^{T}
-    y^{\langle t\rangle}\log\!\left(\hat{y}^{\langle t\rangle}\right)
-  \]
-</div>
+Let’s say we chose Cross-Entropy Loss as our loss function $L$.
+
+Recall how we have an output at node $y^{\langle t\rangle}$ which changes for each time step $t$. Therefore, the overall loss $L$ can be computed as the sum over all time steps, like so:
+
+<figure class="article-figure">
+  <img src="../assets/images/rnn/9.png" alt="The total RNN loss formed by summing the individual losses across all time steps">
+  <figcaption>Figure 9. The total sequence loss is the sum of the losses across all time steps.</figcaption>
+</figure>
+
+Then, the question is, given the variable nature of our time-dependent components, how do we do backpropagation? Well, in RNNs, we do something called **Backpropagation Through Time (BTT)**.
+
+It’s called BTT because we calculate the gradients in the backpropagation layer by layer, but specifically from the last time step towards the original time step. In other words, we’re going backwards in time, hence the name!
+
+Let’s dive into the derivation of our BTT process next.
 
 <h4 id="bptt-derivation">2.2.1. Deriving Components in Backpropagation Through Time</h4>
 
-An important gradient at the output layer is:
+Starting with the loss function, which we defined as the cross-entropy loss:
 
-<div class="equation-block" role="math" aria-label="Output gradient equation">
+<div class="equation-block" role="math" aria-label="Cross-entropy loss at time step t">
   \[
-    \frac{\partial \mathcal{L}^{\langle t\rangle}}
-         {\partial z_y^{\langle t\rangle}}
-    = \hat{y}^{\langle t\rangle} - y^{\langle t\rangle}
+    L^{\langle t\rangle}
+    = -y^{\langle t\rangle}\log\!\left(\hat{y}^{\langle t\rangle}\right)
   \]
 </div>
 
-<p class="draft-note">Explain how the gradient moves backward from the final time step to the first and why this method is called Backpropagation Through Time.</p>
+Using the derivative of natural log, the derivative of the loss function with respect to predicted value $\hat{y}^{\langle t\rangle}$ is:
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to the predicted value">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}
+           {\partial \hat{y}^{\langle t\rangle}}
+      = -\frac{y^{\langle t\rangle}}
+              {\hat{y}^{\langle t\rangle}}
+    }
+  \]
+</div>
+
+Then, moving to the derivative of the loss function with respect to weighted input $z_y^{\langle t\rangle}$, using the derivative of the softmax formula (derived in my previous project post on basic neural networks):
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to the weighted output input">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}
+           {\partial z_y^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial \hat{y}^{\langle t\rangle}}
+        \cdot
+        \frac{\partial \hat{y}^{\langle t\rangle}}
+             {\partial z_y^{\langle t\rangle}}
+      = -\frac{y^{\langle t\rangle}}
+               {\hat{y}^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\,\operatorname{softmax}}
+             {\partial z_y^{\langle t\rangle}}
+      = \hat{y}^{\langle t\rangle} - y^{\langle t\rangle}
+    }
+  \]
+</div>
+
+Next, the weighted input $z_y^{\langle t\rangle}$ is comprised of two components, the weight $W_{yh}$ and bias $b_y$.
+
+Let’s find the derivative of the loss function with respect to weight $W_{yh}$:
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to output weight W y h">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}{\partial W_{yh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_y^{\langle t\rangle}}
+        \cdot
+        \frac{\partial z_y^{\langle t\rangle}}{\partial W_{yh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_y^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\!\left(W_{yh}h^{\langle t\rangle}+b_y\right)}
+             {\partial W_{yh}}
+      = \left(\hat{y}^{\langle t\rangle}-y^{\langle t\rangle}\right)
+        \cdot h^{\langle t\rangle}
+    }
+  \]
+</div>
+
+Also, the derivative of the loss function with respect to bias $b_y$:
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to output bias b y">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}{\partial b_y}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_y^{\langle t\rangle}}
+        \cdot
+        \frac{\partial z_y^{\langle t\rangle}}{\partial b_y}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_y^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\!\left(W_{yh}h^{\langle t\rangle}+b_y\right)}
+             {\partial b_y}
+      = \left(\hat{y}^{\langle t\rangle}-y^{\langle t\rangle}\right)
+    }
+  \]
+</div>
+
+The next layer down would be the activated function $h^{\langle t\rangle}=\sigma_h\!\left(z_h^{\langle t\rangle}\right)$, where we want to find the derivative of the loss function with respect to $h^{\langle t\rangle}$.
+
+However, recall that while activated function $h^{\langle t\rangle}$ directly contributes to our output $\hat{y}^{\langle t\rangle}$ at time step $t$, it is also passed into the activated function of the next time step, where $z^{\langle t+1\rangle}=W_{hx}x^{\langle t+1\rangle}+W_{hh}h^{\langle t\rangle}+b_h$, which also propagates forward to all continuing time steps.
+
+Hence, in order to find the total derivative of the loss function with respect to $h^{\langle t\rangle}$, we need to add the derivative of $L^{\langle t\rangle}$ with respect to $h^{\langle t\rangle}$ and the derivative of $L^{\langle t+1\rangle}$ with respect to $h^{\langle t\rangle}$.
+
+We’ll start with the derivative of $L^{\langle t\rangle}$ with respect to $h^{\langle t\rangle}$:
+
+<div class="equation-block" role="math" aria-label="Current time-step loss derivative with respect to the hidden state">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}
+           {\partial h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_y^{\langle t\rangle}}
+        \cdot
+        \frac{\partial z_y^{\langle t\rangle}}
+             {\partial h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_y^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\!\left(W_{yh}h^{\langle t\rangle}+b_y\right)}
+             {\partial h^{\langle t\rangle}}
+      = \left(\hat{y}^{\langle t\rangle}-y^{\langle t\rangle}\right)
+        \cdot W_{yh}
+    }
+  \]
+</div>
+
+And also the derivative of $L^{\langle t+1\rangle}$ with respect to $h^{\langle t\rangle}$:
+
+<div class="equation-block" role="math" aria-label="Next time-step loss derivative with respect to the current hidden state">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t+1\rangle}}
+           {\partial h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t+1\rangle}}
+             {\partial z^{\langle t+1\rangle}}
+        \cdot
+        \frac{\partial z^{\langle t+1\rangle}}
+             {\partial h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t+1\rangle}}
+             {\partial z^{\langle t+1\rangle}}
+        \cdot
+        \frac{\partial\!\left(
+          W_{hx}x^{\langle t+1\rangle}
+          +W_{hh}h^{\langle t\rangle}
+          +b_h
+        \right)}
+        {\partial h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t+1\rangle}}
+             {\partial z^{\langle t+1\rangle}}
+        \cdot W_{hh}
+    }
+  \]
+</div>
+
+Adding both together, the total derivative of $L^{\langle t\rangle}$ with respect to $h^{\langle t\rangle}$ is:
+
+<div class="equation-block" role="math" aria-label="Total loss derivative with respect to the current hidden state">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t+1\rangle}}
+           {\partial h^{\langle t\rangle}}
+      = \left(
+          \left(\hat{y}^{\langle t\rangle}-y^{\langle t\rangle}\right)
+          \cdot W_{yh}
+        \right)
+        + \left(
+          \frac{\partial L^{\langle t+1\rangle}}
+               {\partial z^{\langle t+1\rangle}}
+          \cdot W_{hh}
+        \right)
+    }
+  \]
+</div>
+
+Next, we’ll go deeper to find the derivative of our loss function with respect to weighted sum $z_h^{\langle t\rangle}$. To do this, we’ll use the derivative of $\tanh$:
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to the hidden weighted sum">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}
+           {\partial z_h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial h^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\!\left(\tanh\!\left(z_h^{\langle t\rangle}\right)\right)}
+             {\partial z_h^{\langle t\rangle}}
+      = \left(1-\tanh\!\left(z_h^{\langle t\rangle}\right)^2\right)
+        \cdot
+        \frac{\partial L^{\langle t\rangle}}
+             {\partial h^{\langle t\rangle}}
+    }
+  \]
+</div>
+
+Finally, since we know that $z_h^{\langle t\rangle}=W_{hx}x^{\langle t\rangle}+W_{hh}h^{\langle t-1\rangle}+b_h$, we can finish BTT by finding the derivative of the loss function with respect to $W_{hx}$, $W_{hh}$, and $b_h$.
+
+Let’s start with the derivative of the loss function with respect to $W_{hx}$:
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to input weight W h x">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}{\partial W_{hx}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial z_h^{\langle t\rangle}}{\partial W_{hx}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\!\left(
+          W_{hx}x^{\langle t\rangle}
+          +W_{hh}h^{\langle t-1\rangle}
+          +b_h
+        \right)}
+        {\partial W_{hx}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot x^{\langle t\rangle}
+    }
+  \]
+</div>
+
+Next, to find the derivative of the loss function with respect to $W_{hh}$:
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to recurrent weight W h h">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}{\partial W_{hh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial z_h^{\langle t\rangle}}{\partial W_{hh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\!\left(
+          W_{hx}x^{\langle t\rangle}
+          +W_{hh}h^{\langle t-1\rangle}
+          +b_h
+        \right)}
+        {\partial W_{hh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot h^{\langle t-1\rangle}
+    }
+  \]
+</div>
+
+Finally, we find the derivative of the loss function with respect to $b_h$:
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to hidden bias b h">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}{\partial b_h}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial z_h^{\langle t\rangle}}{\partial b_h}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\!\left(
+          W_{hx}x^{\langle t\rangle}
+          +W_{hh}h^{\langle t-1\rangle}
+          +b_h
+        \right)}
+        {\partial b_h}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+    }
+  \]
+</div>
+
+Nice! We’re finally done with the derivation for backpropagation through time.
+
+Just a quick note, recall that $\frac{\partial L^{\langle t\rangle}}{\partial h^{\langle t\rangle}}$ is dependent on $\frac{\partial L^{\langle t+1\rangle}}{\partial h^{\langle t\rangle}}$, and in the same way, $\frac{\partial L^{\langle t-1\rangle}}{\partial h^{\langle t-1\rangle}}$ will be dependent on $\frac{\partial L^{\langle t\rangle}}{\partial h^{\langle t-1\rangle}}$.
+
+The derivative of our loss function $L^{\langle t\rangle}$ with respect to $h^{\langle t-1\rangle}$ is:
+
+<div class="equation-block" role="math" aria-label="Loss derivative passed to the previous hidden state">
+  \[
+    \frac{\partial L^{\langle t\rangle}}
+         {\partial h^{\langle t-1\rangle}}
+    = \frac{\partial L^{\langle t\rangle}}
+           {\partial z^{\langle t\rangle}}
+      \cdot W_{hh}
+  \]
+</div>
+
+We will store the value in a variable so that it can be updated every time step $t$ and used for calculation in the next time step $t-1$.
+
+Finally, let’s summarize how we update all the parameters based on the gradients of the current time step $t$:
+
+<div class="equation-block" role="math" aria-label="RNN parameter update equations">
+  \[
+    \begin{aligned}
+      W_{yh} &= W_{yh} - \alpha\cdot
+        \frac{\partial L^{\langle t\rangle}}{\partial W_{yh}} \\
+      b_y &= b_y - \alpha\cdot
+        \frac{\partial L^{\langle t\rangle}}{\partial b_y} \\
+      W_{hx} &= W_{hx} - \alpha\cdot
+        \frac{\partial L^{\langle t\rangle}}{\partial W_{hx}} \\
+      W_{hh} &= W_{hh} - \alpha\cdot
+        \frac{\partial L^{\langle t\rangle}}{\partial W_{hh}} \\
+      b_h &= b_h - \alpha\cdot
+        \frac{\partial L^{\langle t\rangle}}{\partial b_h}
+    \end{aligned}
+  \]
+</div>
 
 <h3 id="gradients">2.3. Vanishing and Exploding Gradients</h3>
 
-Dependencies across many time steps produce a product of multiple derivatives:
+Did you notice that for our above derivation of the loss function with respect to $W_{hh}$:
 
-<div class="equation-block" role="math" aria-label="Recurrent gradient dependency equation">
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to recurrent weight W h h">
   \[
-    \frac{\partial h^{\langle t\rangle}}
-         {\partial h^{\langle k\rangle}}
-    = \prod_{i=k+1}^{t}
-      \frac{\partial h^{\langle i\rangle}}
-           {\partial h^{\langle i-1\rangle}}
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}{\partial W_{hh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial z_h^{\langle t\rangle}}{\partial W_{hh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot
+        \frac{\partial\!\left(
+          W_{hx}x^{\langle t\rangle}
+          +W_{hh}h^{\langle t-1\rangle}
+          +b_h
+        \right)}
+        {\partial W_{hh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial z_h^{\langle t\rangle}}
+        \cdot h^{\langle t-1\rangle}
+    }
   \]
 </div>
 
-<p class="draft-note">Explain intuitively what happens when the multiplied terms are repeatedly smaller than 1 or larger than 1.</p>
+The result involves $h^{\langle t-1\rangle}$?
+
+Let’s consider the hidden state update rule:
+
+<div class="equation-block" role="math" aria-label="RNN hidden state update rule">
+  \[
+    h^{\langle t\rangle}
+    = \tanh\!\left(
+        W_{hx}x^{\langle t\rangle}
+        +W_{hh}h^{\langle t-1\rangle}
+        +b_h
+      \right)
+  \]
+</div>
+
+Since $h^{\langle t\rangle}$ depends on $h^{\langle t-1\rangle}$, and $h^{\langle t-1\rangle}$ itself depends on $h^{\langle t-2\rangle}$ and so on, we get a recursive dependency.
+
+Since each hidden state depends on the previous hidden state, if we modify $h^{\langle k\rangle}$, it will not just affect $h^{\langle k+1\rangle}$ but all future states $h^{\langle k+2\rangle}$ and so on. Thus, to compute how much $h^{\langle t\rangle}$ changes with respect to $h^{\langle k\rangle}$, we must recursively track how each hidden state depends on the previous one.
+
+This also means that the effect of $W_{hh}$ at time step $t$ is not just through its direct contribution at time $t$, but indirectly through all previous hidden states $h^{\langle k\rangle}$ where $k<t$.
+
+So, we could expand our current derivation to compute the derivative of the loss function with respect to $W_{hh}$ this way:
+
+<div class="equation-block" role="math" aria-label="Expanded recurrent weight gradient across all time steps">
+  \[
+    \boxed{
+      \frac{\partial L^{\langle t\rangle}}{\partial W_{hh}}
+      = \frac{\partial L^{\langle t\rangle}}
+             {\partial y^{\langle t\rangle}}
+        \cdot
+        \frac{\partial y^{\langle t\rangle}}
+             {\partial h^{\langle t\rangle}}
+        \cdot
+        \left(
+          \sum_{k=1}^{t}
+          \frac{\partial h^{\langle t\rangle}}
+               {\partial h^{\langle k\rangle}}
+          \cdot
+          \frac{\partial h^{\langle k\rangle}}
+               {\partial W_{hh}}
+        \right)
+    }
+  \]
+</div>
+
+We’re essentially expanding $\frac{\partial h^{\langle t\rangle}}{\partial W_{hh}}$ to the summation term above, which accounts for the recurrence relationship in the RNN. **Each term in the sum represents the effect of $W_{hh}$ on $h^{\langle t\rangle}$ through an earlier hidden state $h^{\langle k\rangle}$.**
+
+We have to compute the gradient $\frac{\partial h^{\langle t\rangle}}{\partial h^{\langle k\rangle}}$ recursively, as a multiplication of adjacent time steps:
+
+<div class="equation-block" role="math" aria-label="Recursive hidden state gradient across time steps">
+  \[
+    \boxed{
+      \frac{\partial h^{\langle t\rangle}}
+           {\partial h^{\langle k\rangle}}
+      = \prod_{i=k+1}^{t}
+        \frac{\partial h^{\langle i\rangle}}
+             {\partial h^{\langle i-1\rangle}}
+    }
+  \]
+</div>
+
+**And this recursive multiplication is very problematic, because it can cause our derivative/gradient $\frac{\partial h^{\langle t\rangle}}{\partial h^{\langle k\rangle}}$ to vanish, or explode very easily.**
+
+This is what’s called the Vanishing, or Exploding Gradient Problem, and it is inherent in the RNN architecture.
+
+As a result, RNNs struggle to learn long term dependencies, for example. This is because when gradients vanish, earlier time steps stop influencing later predictions, and the model relies on only recent time steps.
+
+When gradients explode, the model might oscillate in loss value due to massive weight updates, preventing proper learning. It might even have a memorization problem, where if early time steps get huge gradients, the model overfits to the first few time steps and prioritizes memorizing them over generalizing across all time steps.
 
 <h2 id="implementation">3. NumPy Implementation and Results</h2>
 

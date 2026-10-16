@@ -40,6 +40,35 @@ function parseFrontMatter(source, fileName) {
   return { metadata, body: source.slice(match[0].length) };
 }
 
+function formatArticleContent(content) {
+  const blockTags = "blockquote|div|figure|h[1-6]|nav|ol|p|pre|table|ul";
+  const adjacentBlocks = new RegExp(
+    `</(${blockTags})><(?=(?:${blockTags})\\b)`,
+    "g"
+  );
+  const lines = content.trim().replace(adjacentBlocks, "</$1>\n\n<").split(/\r?\n/);
+  let insidePreformattedBlock = false;
+
+  return lines
+    .map((line) => {
+      if (insidePreformattedBlock) {
+        if (line.includes("</pre>")) {
+          insidePreformattedBlock = false;
+        }
+
+        return line;
+      }
+
+      if (line.includes("<pre")) {
+        insidePreformattedBlock = true;
+      }
+
+      const readableLine = line.startsWith("<li") ? `  ${line}` : line;
+      return readableLine ? `      ${readableLine}` : "";
+    })
+    .join("\n");
+}
+
 function applyLayout(layout, metadata, content) {
   const values = {
     title: escapeHtml(metadata.title),
@@ -48,7 +77,7 @@ function applyLayout(layout, metadata, content) {
     date: escapeHtml(metadata.date),
     back_url: escapeHtml(metadata.back_url || "../projects.html"),
     back_label: escapeHtml(metadata.back_label || "Projects"),
-    content
+    content: formatArticleContent(content)
   };
 
   return layout.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (_, key) => values[key] ?? "");
