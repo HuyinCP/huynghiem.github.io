@@ -1,5 +1,4 @@
 ---
-layout: project
 title: Project Title
 description: A short description used by search engines.
 lead: A one-sentence introduction displayed below the title.
@@ -27,11 +26,13 @@ Write the project background and objective here.
 
 <h2 id="implementation">2. Implementation</h2>
 
-Explain your approach here. To insert an equation file, use:
+Explain your approach here. Write equations directly beside the explanation:
 
-```text
-&#123;% include equations/project-name/equation-name.html %&#125;
-```
+<div class="equation-block" role="math" aria-label="Describe this equation">
+  \[
+    y = f(x)
+  \]
+</div>
 
 <h2 id="results">3. Results</h2>
 

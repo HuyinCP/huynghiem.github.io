@@ -7,7 +7,17 @@
   <meta name="description" content="Building a Recurrent Neural Network from scratch with NumPy.">
   <title>Building a Recurrent Neural Network (RNN) from Scratch · Huy</title>
   <link rel="stylesheet" href="../assets/css/style.css">
-  <script src="../assets/js/mathjax-config.js"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      },
+      svg: {
+        fontCache: "global"
+      }
+    };
+  </script>
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
@@ -95,26 +105,57 @@
   <img src="../assets/images/rnn/6.png" alt="RNN weight matrices shown in compact and unfolded forms across three time steps">
   <figcaption>Figure 6. Weight matrices shared across the unfolded RNN.</figcaption>
 </figure><p>We now have a bigger picture of how the weight matrices are passed around the RNN. However, neural networks usually have other components, such as bias terms and activation functions that introduce non-linearity. In the next section, we’ll look at how these components and weight matrices are combined to form the input to each node.</p>
-<h3 id="forward">2.1. Forward Propagation</h3><p>The net input to the hidden state at time $t$ and the resulting activation are:</p>
-<div class="equation-block" role="math" aria-label="Hidden state equations">
+<h3 id="forward">2.1. Forward Propagation</h3><p>Let’s start by focusing on the inputs to the hidden-layer node $h^{\langle t\rangle}$, highlighted in dark red:</p>
+<figure class="article-figure">
+  <img src="../assets/images/rnn/7.png" alt="Inputs from the current input and previous hidden state highlighted at hidden node h at time t">
+  <figcaption>Figure 7. Inputs to the hidden-layer node at time step $t$.</figcaption>
+</figure><p>As mentioned, our RNN also has biases and activation functions. Here is what the net input and activation at node $h$ look like.</p>
+<p><strong>Net Input to Node $h$:</strong></p>
+<div class="equation-block" role="math" aria-label="Net input to the hidden node">
   \[
-    z_h^{\langle t\rangle}
-    = W_{hx}x^{\langle t\rangle}
-    + W_{hh}h^{\langle t-1\rangle}
-    + b_h
+    \boxed{
+      z_h^{\langle t\rangle}
+      = W_{hx}x^{\langle t\rangle}
+      + W_{hh}h^{\langle t-1\rangle}
+      + b_h
+    }
   \]
+</div><p><strong>Activation at Node $h$:</strong></p>
+<div class="equation-block" role="math" aria-label="Activation at the hidden node">
   \[
-    \boxed{h^{\langle t\rangle} = \tanh\!\left(z_h^{\langle t\rangle}\right)}
+    \boxed{
+      h^{\langle t\rangle}
+      = \sigma_h\!\left(z_h^{\langle t\rangle}\right)
+    }
   \]
-</div><p>The output and probability distribution for the next character are:</p>
-<div class="equation-block" role="math" aria-label="Output equations">
+</div><p>The activation function $\sigma_h$ used here is usually the $\tanh$ function.</p>
+<p>After passing the input $z_h^{\langle t\rangle}$ through the activation function to obtain $h^{\langle t\rangle}$, we use $h^{\langle t\rangle}$ in subsequent operations as part of the input to $y^{\langle t\rangle}$ and to the next hidden node $h^{\langle t+1\rangle}$.</p>
+<p>Next, let’s focus on the net input and output at the output node $y^{\langle t\rangle}$, highlighted in dark red:</p>
+<figure class="article-figure">
+  <img src="../assets/images/rnn/8.png" alt="The output node y and its connection from hidden state h highlighted at time step t">
+  <figcaption>Figure 8. The hidden state produces the output at time step $t$.</figcaption>
+</figure><p><strong>Net Input to Node $y$:</strong></p>
+<div class="equation-block" role="math" aria-label="Net input to the output node">
   \[
-    \begin{aligned}
-      z_y^{\langle t\rangle} &= W_{yh}h^{\langle t\rangle} + b_y, \\
-      \hat{y}^{\langle t\rangle} &= \operatorname{softmax}\!\left(z_y^{\langle t\rangle}\right).
-    \end{aligned}
+    \boxed{
+      z_y^{\langle t\rangle}
+      = W_{yh}h^{\langle t\rangle}
+      + b_y
+    }
   \]
-</div><p class="draft-note">After each equation, explain its meaning with a small example instead of only listing symbols.</p><h3 id="backward">2.2. Backpropagation Through Time</h3><p>Using cross-entropy, the total loss over a sequence of length $T$ can be written as:</p>
+</div><p><strong>Output at Node $y$:</strong></p>
+<div class="equation-block" role="math" aria-label="Activation at the output node">
+  \[
+    \boxed{
+      \hat{y}^{\langle t\rangle}
+      = \sigma_y\!\left(z_y^{\langle t\rangle}\right)
+    }
+  \]
+</div><p>The activation function $\sigma_y$ used here is usually the Softmax function.</p>
+<p>Surprisingly, this is pretty much it for our forward propagation!</p>
+<p>We have covered the inputs and outputs at node $h^{\langle t\rangle}$ and the same operations at node $y^{\langle t\rangle}$.</p>
+<p>Next, let’s learn how backpropagation is performed in RNNs.</p>
+<h3 id="backward">2.2. Backpropagation Through Time</h3><p>Using cross-entropy, the total loss over a sequence of length $T$ can be written as:</p>
 <div class="equation-block" role="math" aria-label="Sequence loss equation">
   \[
     \mathcal{L} = -\sum_{t=1}^{T}

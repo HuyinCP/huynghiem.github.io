@@ -1,5 +1,4 @@
 ---
-layout: project
 title: Building a Recurrent Neural Network (RNN) from Scratch
 description: Building a Recurrent Neural Network from scratch with NumPy.
 lead: In this project, I will build an RNN using only NumPy and use the model to generate text.
@@ -120,27 +119,103 @@ We now have a bigger picture of how the weight matrices are passed around the RN
 
 <h3 id="forward">2.1. Forward Propagation</h3>
 
-The net input to the hidden state at time $t$ and the resulting activation are:
+Let’s start by focusing on the inputs to the hidden-layer node $h^{\langle t\rangle}$, highlighted in dark red:
 
-{% include equations/rnn/forward-hidden.html %}
+<figure class="article-figure">
+  <img src="../assets/images/rnn/7.png" alt="Inputs from the current input and previous hidden state highlighted at hidden node h at time t">
+  <figcaption>Figure 7. Inputs to the hidden-layer node at time step $t$.</figcaption>
+</figure>
 
-The output and probability distribution for the next character are:
+As mentioned, our RNN also has biases and activation functions. Here is what the net input and activation at node $h$ look like.
 
-{% include equations/rnn/forward-output.html %}
+**Net Input to Node $h$:**
 
-<p class="draft-note">After each equation, explain its meaning with a small example instead of only listing symbols.</p>
+<div class="equation-block" role="math" aria-label="Net input to the hidden node">
+  \[
+    \boxed{
+      z_h^{\langle t\rangle}
+      = W_{hx}x^{\langle t\rangle}
+      + W_{hh}h^{\langle t-1\rangle}
+      + b_h
+    }
+  \]
+</div>
+
+**Activation at Node $h$:**
+
+<div class="equation-block" role="math" aria-label="Activation at the hidden node">
+  \[
+    \boxed{
+      h^{\langle t\rangle}
+      = \sigma_h\!\left(z_h^{\langle t\rangle}\right)
+    }
+  \]
+</div>
+
+The activation function $\sigma_h$ used here is usually the $\tanh$ function.
+
+After passing the input $z_h^{\langle t\rangle}$ through the activation function to obtain $h^{\langle t\rangle}$, we use $h^{\langle t\rangle}$ in subsequent operations as part of the input to $y^{\langle t\rangle}$ and to the next hidden node $h^{\langle t+1\rangle}$.
+
+Next, let’s focus on the net input and output at the output node $y^{\langle t\rangle}$, highlighted in dark red:
+
+<figure class="article-figure">
+  <img src="../assets/images/rnn/8.png" alt="The output node y and its connection from hidden state h highlighted at time step t">
+  <figcaption>Figure 8. The hidden state produces the output at time step $t$.</figcaption>
+</figure>
+
+**Net Input to Node $y$:**
+
+<div class="equation-block" role="math" aria-label="Net input to the output node">
+  \[
+    \boxed{
+      z_y^{\langle t\rangle}
+      = W_{yh}h^{\langle t\rangle}
+      + b_y
+    }
+  \]
+</div>
+
+**Output at Node $y$:**
+
+<div class="equation-block" role="math" aria-label="Activation at the output node">
+  \[
+    \boxed{
+      \hat{y}^{\langle t\rangle}
+      = \sigma_y\!\left(z_y^{\langle t\rangle}\right)
+    }
+  \]
+</div>
+
+The activation function $\sigma_y$ used here is usually the Softmax function.
+
+Surprisingly, this is pretty much it for our forward propagation!
+
+We have covered the inputs and outputs at node $h^{\langle t\rangle}$ and the same operations at node $y^{\langle t\rangle}$.
+
+Next, let’s learn how backpropagation is performed in RNNs.
 
 <h3 id="backward">2.2. Backpropagation Through Time</h3>
 
 Using cross-entropy, the total loss over a sequence of length $T$ can be written as:
 
-{% include equations/rnn/sequence-loss.html %}
+<div class="equation-block" role="math" aria-label="Sequence loss equation">
+  \[
+    \mathcal{L} = -\sum_{t=1}^{T}
+    y^{\langle t\rangle}\log\!\left(\hat{y}^{\langle t\rangle}\right)
+  \]
+</div>
 
 <h4 id="bptt-derivation">2.2.1. Deriving Components in Backpropagation Through Time</h4>
 
 An important gradient at the output layer is:
 
-{% include equations/rnn/output-gradient.html %}
+<div class="equation-block" role="math" aria-label="Output gradient equation">
+  \[
+    \frac{\partial \mathcal{L}^{\langle t\rangle}}
+         {\partial z_y^{\langle t\rangle}}
+    = \hat{y}^{\langle t\rangle} - y^{\langle t\rangle}
+  \]
+</div>
 
 <p class="draft-note">Explain how the gradient moves backward from the final time step to the first and why this method is called Backpropagation Through Time.</p>
 
@@ -148,7 +223,15 @@ An important gradient at the output layer is:
 
 Dependencies across many time steps produce a product of multiple derivatives:
 
-{% include equations/rnn/recurrent-dependency.html %}
+<div class="equation-block" role="math" aria-label="Recurrent gradient dependency equation">
+  \[
+    \frac{\partial h^{\langle t\rangle}}
+         {\partial h^{\langle k\rangle}}
+    = \prod_{i=k+1}^{t}
+      \frac{\partial h^{\langle i\rangle}}
+           {\partial h^{\langle i-1\rangle}}
+  \]
+</div>
 
 <p class="draft-note">Explain intuitively what happens when the multiplied terms are repeatedly smaller than 1 or larger than 1.</p>
 
