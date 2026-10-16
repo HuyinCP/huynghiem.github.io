@@ -27,7 +27,23 @@ a:focus-visible { outline: 2px solid #6e50a7; outline-offset: 3px; }
 .article-back { font-size: 13px; margin-bottom: 45px; }
 .article h1 { font-size: 30px; line-height: 1.2; margin: 0 0 12px; }
 .article h2 { font-size: 24px; margin-top: 48px; padding-bottom: 12px; border-bottom: 1px solid #ddd; }
+.article h3 { font-size: 19px; margin: 36px 0 14px; }
 .article p { margin-top: 0; margin-bottom: 20px; }
+.article-header { margin-bottom: 32px; }
+.article-lead { color: #555; font-size: 17px; line-height: 1.55; }
+.article-toc { margin: 38px 0 50px; padding: 20px 24px; background: #f7f7f7; border-left: 3px solid #777; }
+.article-toc p { margin-bottom: 8px; }
+.article-toc ol { margin-top: 6px; padding-left: 24px; }
+.article-toc li { margin: 5px 0; }
+.article-toc a { text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.draft-note { color: #6b6255; padding: 12px 14px; background: #fff9ed; border: 1px dashed #cfb985; border-radius: 4px; }
+.article-figure { margin: 32px 0; }
+.article-figure img { display: block; width: 100%; height: auto; margin: 0 auto; }
+.article-figure figcaption { color: #666; font-size: 13px; margin-top: 9px; text-align: center; }
+.figure-placeholder > div { min-height: 210px; display: grid; place-items: center; color: #777; background: #f5f5f5; border: 1px dashed #aaa; }
+.article pre { overflow-x: auto; margin: 28px 0; padding: 18px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; line-height: 1.55; }
+.article code { font-family: Consolas, "Liberation Mono", monospace; }
+.article mjx-container[display="true"] { overflow-x: auto; overflow-y: hidden; padding: 8px 0; }
 .graph-wrap { width: 100%; }
 .graph-page { width: 100%; min-height: calc(100vh - 55px); }
 #knowledge-graph { display: block; width: 100%; height: calc(100vh - 90px); min-height: 480px; }

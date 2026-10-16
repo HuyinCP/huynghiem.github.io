@@ -2,6 +2,8 @@
 
 This is a plain HTML, CSS, and JavaScript website inspired by the layout of [codingowen.github.io](https://codingowen.github.io/). **`index.html` is the starting page.** The layout was written for this site; the reference site's source code, photo, and article text were not copied.
 
+https://codingowen.github.io/
+
 ## Preview on your computer
 
 Open `index.html` in a browser. For automatic refresh while editing, install the **Live Server** extension in VS Code, then right-click `index.html` and choose **Open with Live Server**. If that menu item is missing, the extension is not installed or enabled.

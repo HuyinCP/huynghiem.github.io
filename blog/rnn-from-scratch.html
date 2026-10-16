@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Building a Recurrent Neural Network from scratch with NumPy.">
+  <title>Building an RNN from Scratch · Huy</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <nav class="nav wrap" aria-label="Main navigation">
+    <a href="../index.html">Home</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../blogs.html">Technical Blog</a>
+    <a href="../knowledge_graph.html">Knowledge Graph</a>
+  </nav>
+
+  <main class="wrap" id="main-content">
+    <article class="article">
+      <p class="article-back"><a href="../projects.html">← Projects</a></p>
+
+      <header class="article-header">
+        <h1>Building a Recurrent Neural Network (RNN) from Scratch</h1>
+        <p class="article-lead">In this project, I will build an RNN using only NumPy and use the model to generate text.</p>
+        <p class="listing-date">16 OCTOBER 2026</p>
+      </header>
+
+      <p class="draft-note"><strong>Writing prompt:</strong> Briefly introduce what you want to learn, the dataset you will use, and the results you expect.</p>
+
+      <nav class="article-toc" aria-label="Article table of contents">
+        <p><strong>Contents</strong></p>
+        <ol>
+          <li><a href="#overview">Recurrent Neural Network Overview</a></li>
+          <li>
+            <a href="#mathematics">Describing the RNN Mathematically</a>
+            <ol>
+              <li><a href="#forward">Forward Propagation</a></li>
+              <li><a href="#backward">Backpropagation Through Time</a></li>
+              <li><a href="#gradients">Vanishing and Exploding Gradients</a></li>
+            </ol>
+          </li>
+          <li><a href="#implementation">NumPy Implementation and Results</a></li>
+          <li><a href="#references">References</a></li>
+        </ol>
+      </nav>
+
+      <section id="overview">
+        <h2>1. Recurrent Neural Network Overview</h2>
+        <p class="draft-note">Explain in your own words what an RNN is, which kinds of data it works well with, and the role of the hidden state.</p>
+
+        <figure class="article-figure">
+          <img src="../assets/images/rnn/rnn-unfolded.png" alt="An RNN unfolded across three time steps with input x, hidden state h, and output y">
+          <figcaption>Figure 1. An RNN unfolded across multiple time steps.</figcaption>
+        </figure>
+
+        <p>An RNN receives the input \(x^{\langle t\rangle}\) and the previous hidden state \(h^{\langle t-1\rangle}\), then produces a new hidden state \(h^{\langle t\rangle}\).</p>
+      </section>
+
+      <section id="mathematics">
+        <h2>2. Describing the RNN Mathematically</h2>
+        <p class="draft-note">Introduce the weight matrices and their dimensions before explaining each calculation.</p>
+
+        <section id="forward">
+          <h3>2.1. Forward Propagation</h3>
+          <p>The net input to the hidden state at time \(t\) is:</p>
+
+          \[
+            z_h^{\langle t\rangle}
+            = W_{hx}x^{\langle t\rangle}
+            + W_{hh}h^{\langle t-1\rangle}
+            + b_h
+          \]
+
+          <p>We then apply the \(\tanh\) activation function to obtain the new hidden state:</p>
+
+          \[
+            \boxed{h^{\langle t\rangle} = \tanh\!\left(z_h^{\langle t\rangle}\right)}
+          \]
+
+          <p>The output and probability distribution for the next character are:</p>
+
+          \[
+            \begin{aligned}
+              z_y^{\langle t\rangle} &= W_{yh}h^{\langle t\rangle} + b_y, \\
+              \hat{y}^{\langle t\rangle} &= \operatorname{softmax}\!\left(z_y^{\langle t\rangle}\right).
+            \end{aligned}
+          \]
+
+          <p class="draft-note">After each equation, explain its meaning with a small example instead of only listing symbols.</p>
+        </section>
+
+        <section id="backward">
+          <h3>2.2. Backpropagation Through Time</h3>
+          <p>Using cross-entropy, the total loss over a sequence of length \(T\) can be written as:</p>
+
+          \[
+            \mathcal{L} = -\sum_{t=1}^{T}
+            y^{\langle t\rangle}\log\!\left(\hat{y}^{\langle t\rangle}\right)
+          \]
+
+          <p>An important gradient at the output layer is:</p>
+
+          \[
+            \frac{\partial \mathcal{L}^{\langle t\rangle}}
+                 {\partial z_y^{\langle t\rangle}}
+            = \hat{y}^{\langle t\rangle} - y^{\langle t\rangle}
+          \]
+
+          <p class="draft-note">Explain how the gradient moves backward from the final time step to the first and why this method is called Backpropagation Through Time.</p>
+        </section>
+
+        <section id="gradients">
+          <h3>2.3. Vanishing and Exploding Gradients</h3>
+          <p>Dependencies across many time steps produce a product of multiple derivatives:</p>
+
+          \[
+            \frac{\partial h^{\langle t\rangle}}
+                 {\partial h^{\langle k\rangle}}
+            = \prod_{i=k+1}^{t}
+              \frac{\partial h^{\langle i\rangle}}
+                   {\partial h^{\langle i-1\rangle}}
+          \]
+
+          <p class="draft-note">Explain intuitively what happens when the multiplied terms are repeatedly smaller than 1 or larger than 1.</p>
+        </section>
+      </section>
+
+      <section id="implementation">
+        <h2>3. NumPy Implementation and Results</h2>
+        <p class="draft-note">Describe the dataset, hyperparameters, and how you validate the model before adding your implementation.</p>
+
+        <pre><code class="language-python">import numpy as np
+
+# Example structure for one forward step
+def rnn_step(x_t, h_prev, W_hx, W_hh, b_h):
+    z_h = W_hx @ x_t + W_hh @ h_prev + b_h
+    h_t = np.tanh(z_h)
+    return h_t</code></pre>
+
+        <h3>3.1. Training Results</h3>
+        <p class="draft-note">Add the loss curve, generated text, and your own observations here.</p>
+      </section>
+
+      <section id="references">
+        <h2>References</h2>
+        <ul>
+          <li><a href="https://codingowen.github.io/projects/recurrent_nn_from_scratch/">Coding Owen's RNN project article</a></li>
+          <li>Add the books, lectures, repositories, or documentation you actually used.</li>
+        </ul>
+      </section>
+    </article>
+  </main>
+</body>
+</html>
