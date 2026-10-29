@@ -1,0 +1,732 @@
+---
+title: Building a Neural Network from Scratch
+description: Building an image-classification neural network from scratch with NumPy.
+lead: In this project, I build an image-classification neural network using only NumPy and mathematics.
+date: 30 OCTOBER 2024
+output: blog/shallow-nn-from-scratch.html
+back_url: ../projects.html
+back_label: Projects
+---
+
+In this project, we’re going to build a simple neural network from scratch using NumPy.
+
+We’ll build a shallow two-layer neural network with one hidden layer and one output layer. This neural network will be trained on data from the MNIST handwritten digit dataset and will classify input images as digits.
+
+The MNIST dataset consists of 28 × 28 grayscale images of handwritten digits. Each image is labeled with the digit it represents.
+
+<figure class="article-figure article-figure-small">
+  <img src="../assets/images/snn/1.png" alt="Examples of handwritten digits from the MNIST dataset with their labels">
+  <figcaption>Figure 1. Sample handwritten digits from the MNIST dataset.</figcaption>
+</figure>
+
+Here’s the structure for this project post:
+
+<nav class="article-toc" aria-label="Article table of contents">
+  <p><strong>Contents</strong></p>
+  <ol>
+    <li><a href="#overview">Neural Network Overview</a></li>
+    <li>
+      <a href="#mathematics">Describing the Neural Network Mathematically</a>
+      <ol>
+        <li><a href="#forward">Forward Propagation</a></li>
+        <li>
+          <a href="#backward">Backward Propagation</a>
+          <ol>
+            <li><a href="#deriving-1">Deriving dA<sup>[2]</sup></a></li>
+            <li><a href="#deriving-2">Deriving dZ<sup>[2]</sup></a></li>
+            <li><a href="#deriving-3">Deriving dW<sup>[2]</sup></a></li>
+            <li><a href="#deriving-4">Deriving db<sup>[2]</sup></a></li>
+            <li><a href="#deriving-5">Deriving dZ<sup>[1]</sup></a></li>
+            <li><a href="#deriving-6">Deriving dW<sup>[1]</sup> and db<sup>[1]</sup></a></li>
+          </ol>
+        </li>
+        <li><a href="#section-2-summary">Section 2 Summary</a></li>
+      </ol>
+    </li>
+    <li><a href="#implementation">Code Implementation</a></li>
+  </ol>
+</nav>
+
+<h2 id="overview">1. Neural Network Overview</h2>
+
+Our neural network will have three layers in total: an input layer, a hidden layer, and an output layer.
+
+<figure class="article-figure article-figure-small">
+  <img src="../assets/images/snn/2.png" alt="A neural network with 784 input nodes, 10 hidden nodes, and 10 output nodes">
+  <figcaption>Figure 2. The three-layer neural network architecture used for MNIST classification.</figcaption>
+</figure>
+
+The input layer has 784 nodes, which corresponds to the total number of pixels in each 28 × 28 input image from the MNIST dataset. Each pixel is described by a value in the range $[0,255]$, which represents its intensity: white is 255 and black is 0.
+
+Next, to keep things simple, we’ll give the hidden layer 10 nodes. The values of these nodes are first calculated from the weights and biases applied to the 784 nodes in the input layer, followed by a ReLU activation function.
+
+Finally, the output layer will have 10 nodes, corresponding to the 10 possible output classes. Because the possible digit values range from 0 to 9, each output node represents one digit. The values of these nodes are first calculated from the weights and biases applied to the 10 nodes in the hidden layer, followed by a Softmax activation function.
+
+The output layer then gives us a column containing 10 probability values, with one value in the range $[0,1]$ for each class.
+
+We’ll classify the image as the digit whose class has the highest probability value.
+
+<h2 id="mathematics">2. Describing the Neural Network Mathematically</h2>
+
+In this section, we will formalize our neural network mathematically so that we can reproduce the relevant variables in code later.
+
+**We’ll begin by understanding the dimensionality of our input data.**
+
+Conventionally, our input data would stack the information for each image as rows of a matrix. However, because we will be performing matrix multiplication with weights, we’ll transpose the conventional matrix to obtain our matrix $X$, which stores the image data as columns instead. Thus, $X$ has columns of height 784 and contains $m$ columns in total, where the input dataset contains $m$ images.
+
+<figure class="article-figure article-figure-small">
+  <img src="../assets/images/snn/3.png" alt="The MNIST input matrix transposed so that each image is stored as a column vector of 784 pixels">
+  <figcaption>Figure 3. The input matrix stores each flattened MNIST image as a column.</figcaption>
+</figure>
+
+**Next, we’ll look at the weights and biases between our neural network layers.**
+
+Let’s index our layers as follows: the input layer is layer 0, the hidden layer is layer 1, and the output layer is layer 2.
+
+Between each pair of layers is a set of connections between every node in the previous layer and every node in the following layer. When values from one layer are passed to the next, a weight is applied to each node value from the original layer, followed by a bias term added to the weighted node value. Finally, an activation function is applied to the weighted and biased node value to add non-linearity to the output.
+
+Mathematically, we describe it like this:
+
+Let’s say we’re going from layer 0, which has 784 nodes, to layer 1, which has 10 nodes. Each node $h_i$ in layer 1 is computed as:
+
+<div class="equation-block" role="math" aria-label="Value of hidden node i as a weighted sum of the input nodes followed by an activation function">
+  \[
+    \boxed{
+      h_i = f\!\left(\sum_{j=1}^{784} w_{ij}x_j + b_i\right)
+    }
+  \]
+</div>
+
+Where:
+
+- $x_j$ is the input value from originating node $j$.
+- $w_{ij}$ is the weight connecting input node $j$ to node $i$.
+- $b_i$ is the bias applied to node $i$.
+- $f(\cdot)$ is the activation function, such as ReLU, sigmoid, or $\tanh$.
+
+Let’s call the weight matrix connecting layer 0 to layer 1 $W^{[1]}$. Our weight matrices have dimensions $n^{[L]}\times n^{[L-1]}$, where $n^{[L-1]}$ is the number of nodes in the originating layer and $n^{[L]}$ is the number of nodes in the receiving layer.
+
+For example, $W^{[1]}$ is a $10\times784$ matrix, while $W^{[2]}$ is a $10\times10$ matrix.
+
+Next, for biases, we know that they are constant terms added to each weighted node in the receiving layer. Biases are therefore represented as an $n^{[L]}$-dimensional vector. Let’s call the bias vector connecting layer 0 to layer 1 $b^{[1]}$.
+
+For example, both $b^{[1]}$ and $b^{[2]}$ are 10-dimensional vectors.
+
+Moving on to the next section, we’ll formulate the mathematical operations that happen during the forward propagation phase of our neural network.
+
+<h3 id="forward">2.1. Forward Propagation</h3>
+
+During forward propagation, weights, biases, and activation functions are applied to our data.
+
+**Let’s cover the mathematical operations going from layer 0 to layer 1:**
+
+For our input data matrix $X$, we’ll apply weight matrix $W^{[1]}$ and bias vector $b^{[1]}$ to obtain the unactivated output $Z^{[1]}$:
+
+<div class="equation-block" role="math" aria-label="Unactivated output of the first neural network layer">
+  \[
+    \boxed{
+      Z^{[1]} = W^{[1]}X + b^{[1]}
+    }
+  \]
+</div>
+
+$W^{[1]}$ has dimensions $10\times784$, while $X$ has dimensions $784\times m$, so $W^{[1]}X$ has dimensions $10\times m$. We then add the 10-dimensional vector $b^{[1]}$ to every column in $W^{[1]}X$, as shown below:
+
+<figure class="article-figure">
+  <img src="../assets/images/snn/4.png" alt="The bias vector added to every column of the weighted input matrix">
+  <figcaption>Figure 4. The bias vector is added to every example in the weighted input matrix.</figcaption>
+</figure>
+
+Next, we’ll apply the Rectified Linear Unit (ReLU) activation function to $Z^{[1]}$. ReLU is a simple function that adds non-linearity to our neural network, as shown below:
+
+<figure class="article-figure article-figure-small">
+  <img src="../assets/images/snn/5.png" alt="Graph of the ReLU activation function, which returns zero for negative inputs and the input value for positive inputs">
+  <figcaption>Figure 5. The ReLU activation function.</figcaption>
+</figure>
+
+When applying ReLU to $Z^{[1]}$, we’ll call the ReLU function $g^{[1]}$ and its output $A^{[1]}$, whereby:
+
+<div class="equation-block" role="math" aria-label="Activated output of the hidden layer">
+  \[
+    \boxed{
+      A^{[1]} = g^{[1]}\!\left(Z^{[1]}\right)
+    }
+  \]
+</div>
+
+**Next, we’ll cover the mathematical operations going from layer 1 to layer 2:**
+
+We’ll now apply the weights and biases going from layer 1 to layer 2, whereby:
+
+<div class="equation-block" role="math" aria-label="Unactivated output of the second neural network layer">
+  \[
+    \boxed{
+      Z^{[2]} = W^{[2]}A^{[1]} + b^{[2]}
+    }
+  \]
+</div>
+
+Then, we’ll apply the Softmax activation function to $Z^{[2]}$ to get the final output. If we had more hidden layers, we could use an activation such as ReLU, but because this is the output layer, we specifically need the Softmax activation function.
+
+This is because, for each column in $Z^{[2]}$, Softmax exponentiates each individual entry and then divides each exponentiated entry by the sum of all exponentiated entries in that column.
+
+<div class="equation-block" role="math" aria-label="Softmax activation function applied to each output value">
+  \[
+    \boxed{
+      \sigma(z_i)
+      = \frac{e^{z_i}}
+             {\sum_{j=1}^{n}e^{z_j}}
+    }
+  \]
+</div>
+
+This ensures that the output values are in the range $(0,1)$ and sum to 1, making them interpretable as probabilities. This is necessary for our image-classification task.
+
+For the Softmax function $g^{[2]}$, we therefore have:
+
+<div class="equation-block" role="math" aria-label="Activated output of the neural network output layer">
+  \[
+    \boxed{
+      A^{[2]} = g^{[2]}\!\left(Z^{[2]}\right)
+    }
+  \]
+</div>
+
+Now that we’ve covered the final layer, we’ve worked through the entire forward propagation process in the neural network. Next, we’ll cover backward propagation.
+
+<h3 id="backward">2.2. Backward Propagation</h3>
+
+We need to perform backpropagation to carry out gradient descent and make our neural network learn.
+
+Mathematically, we compute the derivative of the loss function with respect to each weight and bias parameter. This allows us to identify each parameter’s contribution to the total loss and update or optimize it accordingly.
+
+**Let’s begin by choosing a suitable loss function:**
+
+Because we’re using the Softmax activation function, we’ll use Cross-Entropy Loss, also called log loss. For a given column:
+
+<div class="equation-block" role="math" aria-label="Cross-entropy loss over all output classes">
+  \[
+    \boxed{
+      J(y,\hat{y})
+      = -\sum_{i=1}^{C}y_i\log\!\left(\hat{y}_i\right)
+    }
+  \]
+</div>
+
+Here, class label $y$ is the one-hot encoded ground truth, where only one class is 1 and the rest are 0, while $\hat{y}$ contains the predicted probabilities.
+
+Because the ground truth $y$ is one-hot encoded, the loss simplifies to:
+
+<div class="equation-block" role="math" aria-label="Cross-entropy loss for the correct class">
+  \[
+    \boxed{
+      J(y,\hat{y})=-\log\!\left(\hat{y}_c\right)
+    }
+  \]
+</div>
+
+Here, $c$ is the correct class index. The closer $\hat{y}_c$ is to 1, the closer the loss is to 0. As $\hat{y}_c$ approaches 0, the loss approaches $+\infty$.
+
+By minimizing the loss function, we improve the accuracy of our model.
+
+**Next, let’s go over the gradient descent and backpropagation phase in detail:**
+
+To minimize the loss, we update each parameter by subtracting the learning rate $\alpha$ multiplied by the derivative of the loss function with respect to that parameter. We repeat this process over many rounds of gradient descent, allowing us to converge toward a set of parameters that minimizes the total loss.
+
+The gradient descent process looks like this:
+
+<div class="equation-block" role="math" aria-label="Gradient descent updates for neural network weights and biases">
+  \[
+    \begin{aligned}
+      W^{[1]} &:= W^{[1]}-\alpha
+        \frac{\partial J}{\partial W^{[1]}} \\
+      b^{[1]} &:= b^{[1]}-\alpha
+        \frac{\partial J}{\partial b^{[1]}} \\
+      W^{[2]} &:= W^{[2]}-\alpha
+        \frac{\partial J}{\partial W^{[2]}} \\
+      b^{[2]} &:= b^{[2]}-\alpha
+        \frac{\partial J}{\partial b^{[2]}}
+    \end{aligned}
+  \]
+</div>
+
+Therefore, our objective is to find the derivatives $\frac{\partial J}{\partial W^{[1]}}$, $\frac{\partial J}{\partial b^{[1]}}$, $\frac{\partial J}{\partial W^{[2]}}$, and $\frac{\partial J}{\partial b^{[2]}}$.
+
+Let’s make things simpler and label these values as $dW^{[1]}$, $db^{[1]}$, $dW^{[2]}$, and $db^{[2]}$, respectively.
+
+To find each of these values, we need to step backward through our network, starting with $\frac{\partial J}{\partial A^{[2]}}$, also labeled as $dA^{[2]}$, because $A^{[2]}$ was the final output.
+
+<h4 id="deriving-1">2.2.1. Deriving $dA^{[2]}$</h4>
+
+**Let’s do some quick math to derive $dA^{[2]}$:**
+
+First, consider a single data point in $\hat{y}$:
+
+<div class="equation-block" role="math" aria-label="Derivative of cross-entropy loss with respect to a single predicted probability">
+  \[
+    \begin{aligned}
+      \frac{\partial J}{\partial \hat{y}_i}
+      &= \frac{\partial}{\partial \hat{y}_i}
+        \left(-\sum_k y_k\log\!\left(\hat{y}_k\right)\right) \\
+      &= -\frac{y_i}{\hat{y}_i}
+    \end{aligned}
+  \]
+</div>
+
+Generalizing to all data points in the vectors $y$ and $\hat{y}$:
+
+<div class="equation-block" role="math" aria-label="Derivative of cross-entropy loss with respect to the output vector">
+  \[
+    \frac{\partial J}{\partial A^{[2]}}
+    = \frac{\partial J}{\partial \hat{y}}
+    = -\frac{y}{\hat{y}}
+  \]
+</div>
+
+Finally, we obtain:
+
+<div class="equation-block" role="math" aria-label="Gradient d A 2">
+  \[
+    \boxed{
+      dA^{[2]}=-\frac{y}{\hat{y}}
+    }
+  \]
+</div>
+
+<h4 id="deriving-2">2.2.2. Deriving $dZ^{[2]}$</h4>
+
+We find $dZ^{[2]}$ as follows:
+
+<div class="equation-block" role="math" aria-label="Chain rule for gradient d Z 2">
+  \[
+    \begin{aligned}
+      dZ^{[2]}
+      &= \frac{\partial J}{\partial A^{[2]}}
+        \cdot
+        \frac{\partial A^{[2]}}{\partial Z^{[2]}} \\
+      &= -\frac{y}{\hat{y}}
+        \cdot
+        \frac{\partial}{\partial Z^{[2]}}\!\left(A^{[2]}\right)
+    \end{aligned}
+  \]
+</div>
+
+To find $dZ^{[2]}$, we first need the derivative of the Softmax output $A^{[2]}$ with respect to $Z^{[2]}$. To simplify the notation, we’ll temporarily write $Z^{[2]}$ as $x$:
+
+<div class="equation-block" role="math" aria-label="Softmax Jacobian matrix">
+  \[
+    \frac{\partial}{\partial Z^{[2]}}\!\left(A^{[2]}\right)
+    = \frac{\partial}{\partial x}\!\left(A^{[2]}\right)
+    =
+    \begin{bmatrix}
+      \frac{\partial A_1^{[2]}}{\partial x_1} &
+      \frac{\partial A_1^{[2]}}{\partial x_2} &
+      \cdots &
+      \frac{\partial A_1^{[2]}}{\partial x_K} \\
+      \frac{\partial A_2^{[2]}}{\partial x_1} &
+      \frac{\partial A_2^{[2]}}{\partial x_2} &
+      \cdots &
+      \frac{\partial A_2^{[2]}}{\partial x_K} \\
+      \vdots & \vdots & \ddots & \vdots \\
+      \frac{\partial A_K^{[2]}}{\partial x_1} &
+      \frac{\partial A_K^{[2]}}{\partial x_2} &
+      \cdots &
+      \frac{\partial A_K^{[2]}}{\partial x_K}
+    \end{bmatrix}
+  \]
+</div>
+
+Let’s compute $\frac{\partial A_i^{[2]}}{\partial x_j}$ for arbitrary indices $i$ and $j$:
+
+<div class="equation-block" role="math" aria-label="Quotient rule applied to a Softmax component">
+  \[
+    \begin{aligned}
+      \frac{\partial A_i^{[2]}}{\partial x_j}
+      &= \frac{\partial}{\partial x_j}
+        \left(
+          \frac{e^{x_i}}{\sum_{k=1}^{K}e^{x_k}}
+        \right) \\
+      &= \frac{
+          \left(e^{x_i}\right)'\left(\sum_{k=1}^{K}e^{x_k}\right)
+          -\left(\sum_{k=1}^{K}e^{x_k}\right)'e^{x_i}
+        }{
+          \left(\sum_{k=1}^{K}e^{x_k}\right)^2
+        }
+    \end{aligned}
+  \]
+</div>
+
+Observe that:
+
+<div class="equation-block" role="math" aria-label="Derivative of an exponential component with respect to x j">
+  \[
+    \frac{\partial}{\partial x_j}\!\left(e^{x_i}\right)
+    =
+    \begin{cases}
+      e^{x_i}, & i=j \\
+      0, & i\ne j
+    \end{cases}
+  \]
+</div>
+
+Similarly:
+
+<div class="equation-block" role="math" aria-label="Derivative of the Softmax denominator with respect to x j">
+  \[
+    \begin{aligned}
+      \frac{\partial}{\partial x_j}
+      \left(\sum_{k=1}^{K}e^{x_k}\right)
+      &= \sum_{k=1}^{K}
+        \frac{\partial}{\partial x_j}\!\left(e^{x_k}\right) \\
+      &= e^{x_j}
+    \end{aligned}
+  \]
+</div>
+
+Therefore, when $i=j$, corresponding to a diagonal entry of the Jacobian matrix:
+
+<div class="equation-block" role="math" aria-label="Diagonal entry of the Softmax Jacobian">
+  \[
+    \begin{aligned}
+      \frac{\partial A_i^{[2]}}{\partial x_i}
+      &= \frac{
+          e^{x_i}\left(\sum_{k=1}^{K}e^{x_k}-e^{x_i}\right)
+        }{
+          \left(\sum_{k=1}^{K}e^{x_k}\right)^2
+        } \\
+      &= A_i^{[2]}\left(1-A_i^{[2]}\right)
+    \end{aligned}
+  \]
+</div>
+
+When $i\ne j$, corresponding to an off-diagonal entry:
+
+<div class="equation-block" role="math" aria-label="Off-diagonal entry of the Softmax Jacobian">
+  \[
+    \begin{aligned}
+      \frac{\partial A_i^{[2]}}{\partial x_j}
+      &= -\frac{e^{x_i}e^{x_j}}
+        {\left(\sum_{k=1}^{K}e^{x_k}\right)^2} \\
+      &= -A_i^{[2]}A_j^{[2]}
+    \end{aligned}
+  \]
+</div>
+
+To summarize:
+
+<div class="equation-block" role="math" aria-label="Compact form of the Softmax Jacobian">
+  \[
+    \frac{\partial A_i^{[2]}}{\partial x_j}
+    = A_i^{[2]}\left(\delta_{ij}-A_j^{[2]}\right),
+    \qquad
+    \delta_{ij}
+    =
+    \begin{cases}
+      1, & i=j \\
+      0, & i\ne j
+    \end{cases}
+  \]
+</div>
+
+Returning to our original task of finding $dZ^{[2]}$, for output component $k$:
+
+<div class="equation-block" role="math" aria-label="Cross-entropy and Softmax gradient derivation">
+  \[
+    \begin{aligned}
+      \frac{\partial J}{\partial Z_k^{[2]}}
+      &= \sum_i
+        \frac{\partial J}{\partial A_i^{[2]}}
+        \cdot
+        \frac{\partial A_i^{[2]}}{\partial Z_k^{[2]}} \\
+      &= \sum_i
+        \left(-\frac{Y_i}{A_i^{[2]}}\right)
+        A_i^{[2]}\left(\delta_{ik}-A_k^{[2]}\right) \\
+      &= \sum_i -Y_i\left(\delta_{ik}-A_k^{[2]}\right) \\
+      &= -Y_k+A_k^{[2]}\sum_iY_i \\
+      &= A_k^{[2]}-Y_k,
+      \qquad \text{because }\sum_iY_i=1
+    \end{aligned}
+  \]
+</div>
+
+Finally, for all elements of $Z^{[2]}$, we have:
+
+<div class="equation-block" role="math" aria-label="Gradient d Z 2 for Softmax with cross-entropy loss">
+  \[
+    \boxed{
+      dZ^{[2]}=A^{[2]}-Y
+    }
+  \]
+</div>
+
+<h4 id="deriving-3">2.2.3. Deriving $dW^{[2]}$</h4>
+
+Now we want to find $dW^{[2]}$. Using the chain rule again:
+
+<div class="equation-block" role="math" aria-label="Chain rule for the second layer weight gradient">
+  \[
+    \frac{\partial J}{\partial W^{[2]}}
+    = \frac{1}{m}\sum_{i=1}^{m}
+      \frac{\partial J}{\partial Z_i^{[2]}}
+      \cdot
+      \frac{\partial Z_i^{[2]}}{\partial W^{[2]}}
+  \]
+</div>
+
+Here, $m$ is the number of training examples.
+
+Because $Z^{[2]}=W^{[2]}A^{[1]}+b^{[2]}$, we have:
+
+<div class="equation-block" role="math" aria-label="Derivative of Z 2 with respect to W 2">
+  \[
+    \begin{aligned}
+      \frac{\partial Z^{[2]}}{\partial W^{[2]}}
+      &= \frac{\partial}{\partial W^{[2]}}
+        \left(W^{[2]}A^{[1]}+b^{[2]}\right) \\
+      &= A^{[1]}
+    \end{aligned}
+  \]
+</div>
+
+Therefore:
+
+<div class="equation-block" role="math" aria-label="Gradient d W 2">
+  \[
+    \boxed{
+      dW^{[2]}
+      = \frac{1}{m}dZ^{[2]}\left(A^{[1]}\right)^T
+    }
+  \]
+</div>
+
+<h4 id="deriving-4">2.2.4. Deriving $db^{[2]}$</h4>
+
+Now we want to find $db^{[2]}$. Using the chain rule again:
+
+<div class="equation-block" role="math" aria-label="Chain rule for the second layer bias gradient">
+  \[
+    \frac{\partial J}{\partial b^{[2]}}
+    = \frac{1}{m}\sum_{i=1}^{m}
+      \frac{\partial J}{\partial Z_i^{[2]}}
+      \cdot
+      \frac{\partial Z_i^{[2]}}{\partial b^{[2]}}
+  \]
+</div>
+
+Here, $m$ is the number of training examples.
+
+Because $Z^{[2]}=W^{[2]}A^{[1]}+b^{[2]}$, we have:
+
+<div class="equation-block" role="math" aria-label="Derivative of Z 2 with respect to b 2">
+  \[
+    \begin{aligned}
+      \frac{\partial Z^{[2]}}{\partial b^{[2]}}
+      &= \frac{\partial}{\partial b^{[2]}}
+        \left(W^{[2]}A^{[1]}+b^{[2]}\right) \\
+      &= 1
+    \end{aligned}
+  \]
+</div>
+
+Therefore:
+
+<div class="equation-block" role="math" aria-label="Gradient d b 2">
+  \[
+    \boxed{
+      db^{[2]}
+      = \frac{1}{m}\sum_{i=1}^{m}dZ_i^{[2]}
+    }
+  \]
+</div>
+
+<h4 id="deriving-5">2.2.5. Deriving $dZ^{[1]}$</h4>
+
+Now we want to find $dZ^{[1]}$. Using the chain rule:
+
+<div class="equation-block" role="math" aria-label="Chain rule for the first layer unactivated output gradient">
+  \[
+    \frac{\partial J}{\partial Z^{[1]}}
+    = \frac{\partial J}{\partial Z^{[2]}}
+      \cdot
+      \frac{\partial Z^{[2]}}{\partial A^{[1]}}
+      \cdot
+      \frac{\partial A^{[1]}}{\partial Z^{[1]}}
+  \]
+</div>
+
+Because $Z^{[2]}=W^{[2]}A^{[1]}+b^{[2]}$:
+
+<div class="equation-block" role="math" aria-label="Derivative of Z 2 with respect to A 1">
+  \[
+    \frac{\partial Z^{[2]}}{\partial A^{[1]}}=W^{[2]}
+  \]
+</div>
+
+Next, we need $\frac{\partial A^{[1]}}{\partial Z^{[1]}}$. Because $A^{[1]}=g_{\operatorname{ReLU}}\!\left(Z^{[1]}\right)$:
+
+<div class="equation-block" role="math" aria-label="Derivative of the ReLU activation function">
+  \[
+    \frac{\partial A^{[1]}}{\partial Z^{[1]}}
+    = g_{\operatorname{ReLU}}'\!\left(Z^{[1]}\right),
+    \qquad
+    g_{\operatorname{ReLU}}'(z)
+    =
+    \begin{cases}
+      1, & z>0 \\
+      0, & z\le 0
+    \end{cases}
+  \]
+</div>
+
+The ReLU gradient is straightforward to derive. Combining these terms gives:
+
+<div class="equation-block" role="math" aria-label="Gradient d Z 1">
+  \[
+    \boxed{
+      dZ^{[1]}
+      = \left(W^{[2]}\right)^T dZ^{[2]}
+        \odot
+        g_{\operatorname{ReLU}}'\!\left(Z^{[1]}\right)
+    }
+  \]
+</div>
+
+We use the Hadamard product $\odot$ because ReLU was applied element-wise to $Z^{[1]}$, so its derivative must also be applied element-wise during backpropagation.
+
+<h4 id="deriving-6">2.2.6. Deriving $dW^{[1]}$ and $db^{[1]}$</h4>
+
+Recall that $Z^{[1]}=W^{[1]}X+b^{[1]}$. We’ll use the same techniques as in the earlier sections to find our final two gradients, $dW^{[1]}$ and $db^{[1]}$.
+
+For the weight gradient:
+
+<div class="equation-block" role="math" aria-label="Gradient d W 1">
+  \[
+    \begin{aligned}
+      dW^{[1]}
+      &= \frac{1}{m}\sum_{i=1}^{m}
+        \frac{\partial J}{\partial Z_i^{[1]}}
+        \cdot
+        \frac{\partial Z_i^{[1]}}{\partial W^{[1]}} \\
+      &= \boxed{
+        \frac{1}{m}dZ^{[1]}X^T
+      }
+    \end{aligned}
+  \]
+</div>
+
+For the bias gradient:
+
+<div class="equation-block" role="math" aria-label="Gradient d b 1">
+  \[
+    \begin{aligned}
+      db^{[1]}
+      &= \frac{1}{m}\sum_{i=1}^{m}
+        \frac{\partial J}{\partial Z_i^{[1]}}
+        \cdot
+        \frac{\partial Z_i^{[1]}}{\partial b^{[1]}} \\
+      &= \boxed{
+        \frac{1}{m}\sum_{i=1}^{m}dZ_i^{[1]}
+      }
+    \end{aligned}
+  \]
+</div>
+
+$dW^{[1]}$ is the gradient of the loss with respect to the first layer’s weight matrix. The bias gradient $db^{[1]}$ is the average of the $dZ^{[1]}$ error terms because the bias is shared across all examples in the batch and affects all neurons in the first layer equally.
+
+<h3 id="section-2-summary">2.3. Section 2 Summary</h3>
+
+Let’s summarize all the variables we’ve derived for forward and backward propagation, along with the parameter update mechanism.
+
+**Forward Propagation:**
+
+<div class="equation-block" role="math" aria-label="Forward propagation summary">
+  \[
+    \begin{aligned}
+      Z^{[1]} &= W^{[1]}X+b^{[1]} \\
+      A^{[1]} &= g_{\operatorname{ReLU}}^{[1]}\!\left(Z^{[1]}\right) \\
+      Z^{[2]} &= W^{[2]}A^{[1]}+b^{[2]} \\
+      A^{[2]} &= g_{\operatorname{Softmax}}^{[2]}\!\left(Z^{[2]}\right)
+    \end{aligned}
+  \]
+</div>
+
+**Backward Propagation:**
+
+<div class="equation-block" role="math" aria-label="Backward propagation summary">
+  \[
+    \begin{aligned}
+      dA^{[2]} &= -\frac{Y}{\hat{Y}} \\
+      dZ^{[2]} &= A^{[2]}-Y \\
+      dW^{[2]} &= \frac{1}{m}dZ^{[2]}\left(A^{[1]}\right)^T \\
+      db^{[2]} &= \frac{1}{m}\sum_{i=1}^{m}dZ_i^{[2]} \\
+      dZ^{[1]} &= \left(W^{[2]}\right)^T dZ^{[2]}
+        \odot g_{\operatorname{ReLU}}'\!\left(Z^{[1]}\right) \\
+      dW^{[1]} &= \frac{1}{m}dZ^{[1]}X^T \\
+      db^{[1]} &= \frac{1}{m}\sum_{i=1}^{m}dZ_i^{[1]}
+    \end{aligned}
+  \]
+</div>
+
+**Parameter Updates:**
+
+<div class="equation-block" role="math" aria-label="Neural network parameter update summary">
+  \[
+    \begin{aligned}
+      W^{[2]} &:= W^{[2]}-\alpha dW^{[2]} \\
+      b^{[2]} &:= b^{[2]}-\alpha db^{[2]} \\
+      W^{[1]} &:= W^{[1]}-\alpha dW^{[1]} \\
+      b^{[1]} &:= b^{[1]}-\alpha db^{[1]}
+    \end{aligned}
+  \]
+</div>
+
+Here, $\alpha$ is the learning rate that we need to define and tune.
+
+**To recap, when running the neural network model:**
+
+1. First, we carry out forward propagation to get a prediction for a given input image:
+
+<div class="equation-block" role="math" aria-label="Forward propagation sequence">
+  \[
+    \begin{aligned}
+      X
+      &\Rightarrow Z^{[1]}=W^{[1]}X+b^{[1]}
+      \Rightarrow A^{[1]}=g_{\operatorname{ReLU}}\!\left(Z^{[1]}\right) \\
+      A^{[1]}
+      &\Rightarrow Z^{[2]}=W^{[2]}A^{[1]}+b^{[2]}
+      \Rightarrow A^{[2]}=g_{\operatorname{Softmax}}\!\left(Z^{[2]}\right)
+    \end{aligned}
+  \]
+</div>
+
+2. Then, we carry out backpropagation to compute the loss function derivatives:
+
+<div class="equation-block" role="math" aria-label="Backward propagation sequence">
+  \[
+    \begin{aligned}
+      dA^{[2]} &= -\frac{Y}{\hat{Y}} \\
+      dZ^{[2]} &= A^{[2]}-Y \\
+      dW^{[2]} &= \frac{1}{m}dZ^{[2]}\left(A^{[1]}\right)^T \\
+      db^{[2]} &= \frac{1}{m}\sum_{i=1}^{m}dZ_i^{[2]} \\
+      dZ^{[1]} &= \left(W^{[2]}\right)^T dZ^{[2]}
+        \odot g_{\operatorname{ReLU}}'\!\left(Z^{[1]}\right) \\
+      dW^{[1]} &= \frac{1}{m}dZ^{[1]}X^T \\
+      db^{[1]} &= \frac{1}{m}\sum_{i=1}^{m}dZ_i^{[1]}
+    \end{aligned}
+  \]
+</div>
+
+3. We update our parameters accordingly:
+
+<div class="equation-block" role="math" aria-label="Parameter update sequence">
+  \[
+    \begin{aligned}
+      W^{[2]} &:= W^{[2]}-\alpha dW^{[2]} \\
+      b^{[2]} &:= b^{[2]}-\alpha db^{[2]} \\
+      W^{[1]} &:= W^{[1]}-\alpha dW^{[1]} \\
+      b^{[1]} &:= b^{[1]}-\alpha db^{[1]}
+    \end{aligned}
+  \]
+</div>
+
+4. We repeat this process until we reach the chosen iteration limit or are satisfied with the model’s performance.
