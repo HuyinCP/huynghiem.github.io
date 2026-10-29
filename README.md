@@ -36,7 +36,9 @@ To add a project:
 
 ## Publish with GitHub Pages
 
-The current repository is `HuyinCP/GitHubIO`, so its GitHub Pages address will be **https://huyincp.github.io/GitHubIO/**.
+The repository is `HuyinCP/huynghiem.github.io`, so its GitHub Pages address is **https://huyincp.github.io/huynghiem.github.io/**.
+
+The root `.nojekyll` file tells GitHub Pages to publish the generated HTML directly. Keep it in the repository, because project Markdown files in `src/projects/` are build sources and are not meant to be rendered by Jekyll.
 
 1. Push these files to the `main` branch.
 2. Open **Settings**, then **Pages**, in the GitHub repository.
