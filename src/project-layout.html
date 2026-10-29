@@ -22,16 +22,18 @@
 <body>
   <nav class="nav wrap" aria-label="Main navigation">
     <a href="../index.html">Home</a>
-    <a href="../projects.html">Projects</a>
+    <a href="../projects.html" aria-current="page">Projects</a>
     <a href="../blogs.html">Technical Blog</a>
+    <a href="../achievements.html">Achievements</a>
     <a href="../knowledge_graph.html">Knowledge Graph</a>
   </nav>
 
   <main class="wrap" id="main-content">
     <article class="article">
-      <p class="article-back"><a href="{{ back_url }}">← {{ back_label }}</a></p>
+      <p class="article-back"><a href="{{ back_url }}">{{ back_label }}</a></p>
 
       <header class="article-header">
+        <p class="graph-eyebrow">Project notes</p>
         <h1>{{ title }}</h1>
         <p class="article-lead">{{ lead }}</p>
         <p class="listing-date">{{ date }}</p>

@@ -1,147 +1,142 @@
 (() => {
   const svg = document.getElementById("knowledge-graph");
   const source = document.getElementById("graph-data");
+  if (!svg || !source) return;
 
-  if (!svg || !source) {
-    return;
-  }
-
-  let posts;
-
+  let data;
   try {
-    posts = JSON.parse(source.textContent);
-  } catch {
+    data = JSON.parse(source.textContent);
+  } catch (error) {
+    console.error("Unable to read knowledge graph data.", error);
     return;
   }
 
   const namespace = "http://www.w3.org/2000/svg";
-  const width = 900;
-  const height = 520;
-  const center = {
-    x: width / 2,
-    y: height / 2
-  };
-  const tags = [...new Set(posts.flatMap((post) => post.tags || []))];
+  const nodesById = new Map(data.nodes.map((node) => [node.id, node]));
+  const nodeElements = new Map();
+  const linkElements = [];
+  const cards = [...document.querySelectorAll(".graph-project-card")];
+  const projectCount = data.nodes.filter((node) => node.type === "project").length;
+  const topicCount = data.nodes.filter((node) => node.type === "topic").length;
+  document.getElementById("graph-project-count").textContent = `${projectCount} ${projectCount === 1 ? "project" : "projects"}`;
+  document.getElementById("graph-topic-count").textContent = `${topicCount} ${topicCount === 1 ? "topic" : "topics"}`;
 
-  const createElement = (name, attributes = {}) => {
+  const createSvgElement = (name, attributes = {}) => {
     const element = document.createElementNS(namespace, name);
-
     for (const [key, value] of Object.entries(attributes)) {
       element.setAttribute(key, value);
     }
-
     return element;
   };
 
-  const calculatePosition = (index, count, radius, offset = -Math.PI / 2) => ({
-    x: center.x + Math.cos(offset + (2 * Math.PI * index) / Math.max(count, 1)) * radius,
-    y: center.y + Math.sin(offset + (2 * Math.PI * index) / Math.max(count, 1)) * radius
-  });
+  const linksLayer = createSvgElement("g", { class: "graph-links" });
+  const nodesLayer = createSvgElement("g", { class: "graph-map-nodes" });
+  svg.append(linksLayer, nodesLayer);
 
-  const tagPositions = new Map(
-    tags.map((tag, index) => [tag, calculatePosition(index, tags.length, 135)])
-  );
-  const postPositions = posts.map((_, index) =>
-    calculatePosition(
-      index,
-      posts.length,
-      215,
-      -Math.PI / 2 + Math.PI / Math.max(posts.length, 1)
-    )
-  );
+  for (const link of data.links) {
+    const sourceNode = nodesById.get(link.source);
+    const targetNode = nodesById.get(link.target);
+    if (!sourceNode || !targetNode) continue;
 
-  const lines = createElement("g", { class: "graph-lines" });
-  const nodes = createElement("g", { class: "graph-nodes" });
-  svg.append(lines, nodes);
-
-  for (const point of tagPositions.values()) {
-    lines.append(
-      createElement("line", {
-        x1: center.x,
-        y1: center.y,
-        x2: point.x,
-        y2: point.y
-      })
-    );
+    const midpointX = (sourceNode.x + targetNode.x) / 2;
+    const midpointY = (sourceNode.y + targetNode.y) / 2 - 18;
+    const path = createSvgElement("path", {
+      d: `M ${sourceNode.x} ${sourceNode.y} Q ${midpointX} ${midpointY} ${targetNode.x} ${targetNode.y}`,
+      class: "graph-link"
+    });
+    linksLayer.append(path);
+    linkElements.push({ ...link, element: path });
   }
 
-  posts.forEach((post, index) => {
-    for (const tag of post.tags || []) {
-      const point = tagPositions.get(tag);
-
-      if (point) {
-        lines.append(
-          createElement("line", {
-            x1: point.x,
-            y1: point.y,
-            x2: postPositions[index].x,
-            y2: postPositions[index].y
-          })
-        );
-      }
+  const splitLabel = (label) => {
+    const words = label.split(" ");
+    const lines = [""];
+    for (const word of words) {
+      const current = lines[lines.length - 1];
+      if (current && `${current} ${word}`.length > 22) lines.push(word);
+      else lines[lines.length - 1] = current ? `${current} ${word}` : word;
     }
-  });
-
-  const addNode = (point, label, kind, href) => {
-    const group = createElement(href ? "a" : "g", {
-      class: `graph-node graph-${kind}`
-    });
-
-    if (href) {
-      group.setAttribute("href", href);
-    }
-
-    let radius = 23;
-
-    if (kind === "center") {
-      radius = 39;
-    } else if (kind === "topic") {
-      radius = 27;
-    }
-
-    group.append(
-      createElement("circle", {
-        cx: point.x,
-        cy: point.y,
-        r: radius
-      })
-    );
-
-    const text = createElement("text", {
-      x: point.x,
-      y: point.y + (kind === "center" ? 62 : 46),
-      "text-anchor": "middle"
-    });
-    text.textContent = label.length > 30 ? `${label.slice(0, 27)}…` : label;
-    group.append(text);
-
-    if (href) {
-      const title = createElement("title");
-      title.textContent = label;
-      group.append(title);
-    }
-
-    nodes.append(group);
+    return lines;
   };
 
-  addNode(center, "Knowledge", "center");
+  const resetHighlight = () => {
+    for (const element of nodeElements.values()) {
+      element.classList.remove("is-muted", "is-active");
+    }
+    for (const link of linkElements) {
+      link.element.classList.remove("is-muted", "is-active");
+    }
+    for (const card of cards) card.classList.remove("is-active");
+  };
 
-  for (const [tag, point] of tagPositions) {
-    addNode(point, tag, "topic");
+  const highlight = (id) => {
+    const connected = new Set([id]);
+    for (const link of linkElements) {
+      if (link.source === id || link.target === id) {
+        connected.add(link.source);
+        connected.add(link.target);
+      }
+    }
+
+    for (const [nodeId, element] of nodeElements) {
+      element.classList.toggle("is-active", connected.has(nodeId));
+      element.classList.toggle("is-muted", !connected.has(nodeId));
+    }
+    for (const link of linkElements) {
+      const active = link.source === id || link.target === id;
+      link.element.classList.toggle("is-active", active);
+      link.element.classList.toggle("is-muted", !active);
+    }
+    for (const card of cards) {
+      card.classList.toggle("is-active", card.dataset.project === id);
+    }
+  };
+
+  for (const node of data.nodes) {
+    const isProject = node.type === "project";
+    const group = createSvgElement(isProject ? "a" : "g", {
+      class: `graph-map-node graph-map-${node.type}`,
+      "data-node": node.id,
+      "aria-label": node.label
+    });
+    if (isProject) group.setAttribute("href", node.url);
+    else group.setAttribute("tabindex", "0");
+
+    const radius = node.id === "neural-networks" ? 27 : isProject ? 21 : 16;
+    group.append(
+      createSvgElement("circle", { cx: node.x, cy: node.y, r: radius + 11, class: "graph-node-halo" }),
+      createSvgElement("circle", { cx: node.x, cy: node.y, r: radius, class: "graph-node-core" })
+    );
+
+    const label = createSvgElement("text", {
+      x: node.x,
+      y: node.y + radius + 30,
+      "text-anchor": "middle",
+      class: "graph-node-label"
+    });
+    splitLabel(node.label).forEach((line, index) => {
+      const span = createSvgElement("tspan", { x: node.x, dy: index ? 18 : 0 });
+      span.textContent = line;
+      label.append(span);
+    });
+    group.append(label);
+
+    const title = createSvgElement("title");
+    title.textContent = isProject ? `Open project: ${node.label}` : `Topic: ${node.label}`;
+    group.append(title);
+    group.addEventListener("mouseenter", () => highlight(node.id));
+    group.addEventListener("mouseleave", resetHighlight);
+    group.addEventListener("focus", () => highlight(node.id));
+    group.addEventListener("blur", resetHighlight);
+
+    nodesLayer.append(group);
+    nodeElements.set(node.id, group);
   }
 
-  posts.forEach((post, index) => {
-    addNode(postPositions[index], post.title, "post", post.url);
-  });
-
-  if (!posts.length) {
-    const message = createElement("text", {
-      x: center.x,
-      y: center.y + 86,
-      "text-anchor": "middle",
-      class: "graph-empty"
-    });
-    message.textContent = "Add a tagged blog post to grow this graph.";
-    svg.append(message);
+  for (const card of cards) {
+    card.addEventListener("mouseenter", () => highlight(card.dataset.project));
+    card.addEventListener("mouseleave", resetHighlight);
+    card.addEventListener("focus", () => highlight(card.dataset.project));
+    card.addEventListener("blur", resetHighlight);
   }
 })();

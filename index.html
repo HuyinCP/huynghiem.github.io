@@ -9,22 +9,25 @@
 </head>
 <body>
   <nav class="nav wrap" aria-label="Main navigation">
-    <a href="index.html">Home</a>
+    <a href="index.html" aria-current="page">Home</a>
     <a href="projects.html">Projects</a>
     <a href="blogs.html">Technical Blog</a>
+    <a href="achievements.html">Achievements</a>
     <a href="knowledge_graph.html">Knowledge Graph</a>
   </nav>
 
   <main class="wrap" id="main-content">
-    <section class="home-content">
-      <!-- Your profile photo -->
-      <img class="profile-photo" src="assets/images/avt.jpg" alt="Portrait of Huy">
-
-      <!-- Edit the text between each <p> and </p> -->
-      <p>Hi! I'm Huy, an undergraduate student studying Artificial Intelligence at HCMC University of Technology and Engineering.</p>
-      <p>I use this website to share my personal and academic projects, along with technical blog posts.</p>
-      <p>Connect with me on <a href="https://www.linkedin.com/in/quang-huy-nghiem-46ab86336">LinkedIn</a>.</p>
-      <p>Thanks for stopping by!</p>
+    <section class="home-content" aria-label="About Huy">
+      <div class="home-copy">
+        <p class="graph-eyebrow">Hello <span aria-hidden="true">/</span> I'm Huy</p>
+        <p class="home-lead">I'm an undergraduate student studying Artificial Intelligence at HCMC University of Technology and Engineering.</p>
+        <p>I share my personal and academic projects here, along with technical blog posts about what I learn along the way.</p>
+        <p class="home-social">Find me on <a href="https://www.linkedin.com/in/quang-huy-nghiem-46ab86336">LinkedIn</a>.</p>
+        <p class="home-cv"><a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer">View my CV</a></p>
+      </div>
+      <div class="home-portrait">
+        <img class="profile-photo" src="assets/images/avt.jpg" alt="Portrait of Huy">
+      </div>
     </section>
   </main>
 </body>

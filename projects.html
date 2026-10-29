@@ -10,19 +10,47 @@
 <body>
   <nav class="nav wrap" aria-label="Main navigation">
     <a href="index.html">Home</a>
-    <a href="projects.html">Projects</a>
+    <a href="projects.html" aria-current="page">Projects</a>
     <a href="blogs.html">Technical Blog</a>
+    <a href="achievements.html">Achievements</a>
     <a href="knowledge_graph.html">Knowledge Graph</a>
   </nav>
 
   <main class="wrap" id="main-content">
     <section class="listing-page">
-      <div class="intro">
-        <p>Good projects begin with a question worth exploring.</p>
-      </div>
+      <header class="page-intro">
+        <p class="graph-eyebrow">Selected work <span aria-hidden="true">/</span> 03</p>
+        <h1>Projects worth exploring.</h1>
+        <p>From neural networks to self-attention, these are the ideas I've learned by building from scratch.</p>
+      </header>
 
       <div class="listings">
         <!-- See README.md for instructions. Copy a project card between the markers below. -->
+
+        <!-- PROJECT CARD START: SELF ATTENTION -->
+        <article class="listing">
+          <h2>
+            <a href="blog/self-attention-from-scratch.html">
+              Building the Self-Attention Mechanism from Scratch
+            </a>
+          </h2>
+
+          <p class="listing-date">Spring 2025</p>
+
+          <p class="listing-description">
+            In this project, I build the basic self-attention mechanism used in
+            large language models to calculate attention weights for an input sentence.
+          </p>
+
+          <a href="blog/self-attention-from-scratch.html">
+            <img
+              class="project-image"
+              src="assets/images/self_attention_machanism/avt.png"
+              alt="Scaled dot-product attention diagram with query, key, and value operations"
+            >
+          </a>
+        </article>
+        <!-- PROJECT CARD END: SELF ATTENTION -->
 
         <!-- PROJECT CARD START: SHALLOW NN -->
         <article class="listing">

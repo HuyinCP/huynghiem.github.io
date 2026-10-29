@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Knowledge Graph — Huy's personal website.">
+  <meta name="description" content="Explore the ideas connecting Huy's neural network, RNN, and self-attention projects.">
   <title>Knowledge Graph · Huy</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="assets/js/knowledge-graph.js" defer></script>
@@ -13,32 +13,79 @@
     <a href="index.html">Home</a>
     <a href="projects.html">Projects</a>
     <a href="blogs.html">Technical Blog</a>
-    <a href="knowledge_graph.html">Knowledge Graph</a>
+    <a href="achievements.html">Achievements</a>
+    <a href="knowledge_graph.html" aria-current="page">Knowledge Graph</a>
   </nav>
 
   <main class="graph-wrap" id="main-content">
-    <section class="graph-page" aria-label="Interactive knowledge graph">
-      <svg
-        id="knowledge-graph"
-        role="img"
-        aria-label="Topics connected to blog posts"
-        viewBox="0 0 900 520"
-        preserveAspectRatio="xMidYMid meet"
-      ></svg>
-      <p class="graph-hint">
-        Click an article to open it. Edit the graph data in this file to add more topics and articles.
-      </p>
+    <header class="graph-intro wrap">
+      <p class="graph-eyebrow">Knowledge Graph <span aria-hidden="true">/</span> 01</p>
+      <h1>Explore the connections.</h1>
+      <p>Follow the ideas behind my projects, from neural networks to sequence models and self-attention.</p>
+      <div class="graph-counts"><span id="graph-project-count">3 projects</span><span id="graph-topic-count">4 topics</span></div>
+    </header>
+
+    <section class="graph-panel" aria-labelledby="graph-title">
+      <div class="graph-panel-header">
+        <h2 id="graph-title">Knowledge map</h2>
+        <div class="graph-legend" aria-label="Map legend">
+          <span><i class="graph-key graph-key-topic"></i>Topic</span>
+          <span><i class="graph-key graph-key-project"></i>Project</span>
+        </div>
+      </div>
+      <p class="graph-swipe-hint">Swipe sideways to explore the full map.</p>
+      <div class="graph-viewport" role="region" aria-label="Scrollable knowledge map" tabindex="0">
+        <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics connected to three projects" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <p class="graph-hint">Explore a node to trace its connections. Select a project to read its full write-up.</p>
+    </section>
+
+    <section class="graph-directory wrap" aria-labelledby="graph-projects-title">
+      <div class="graph-directory-heading">
+        <p class="graph-eyebrow">Explore further</p>
+        <h2 id="graph-projects-title">Projects in this map</h2>
+      </div>
+      <div class="graph-project-list">
+        <a class="graph-project-card" data-project="shallow-nn" href="blog/shallow-nn-from-scratch.html">
+          <span class="graph-card-number">01</span>
+          <span><strong>Neural Network from Scratch</strong><small>Neural Networks · Computer Vision</small></span>
+        </a>
+        <a class="graph-project-card" data-project="rnn" href="blog/rnn-from-scratch.html">
+          <span class="graph-card-number">02</span>
+          <span><strong>Recurrent Neural Network from Scratch</strong><small>Neural Networks · Sequence Models</small></span>
+        </a>
+        <a class="graph-project-card" data-project="self-attention" href="blog/self-attention-from-scratch.html">
+          <span class="graph-card-number">03</span>
+          <span><strong>Self-Attention Mechanism from Scratch</strong><small>Sequence Models · Attention</small></span>
+        </a>
+      </div>
     </section>
   </main>
 
   <script id="graph-data" type="application/json">
-    [
-      {
-        "title": "Welcome to my blog",
-        "url": "blog/welcome.html",
-        "tags": ["Writing"]
-      }
-    ]
+    {
+      "nodes": [
+        {"id":"neural-networks","type":"topic","label":"Neural Networks","x":500,"y":110},
+        {"id":"computer-vision","type":"topic","label":"Computer Vision","x":170,"y":275},
+        {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":290},
+        {"id":"attention","type":"topic","label":"Attention","x":830,"y":275},
+        {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":170,"y":485,"url":"blog/shallow-nn-from-scratch.html"},
+        {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":500,"y":490,"url":"blog/rnn-from-scratch.html"},
+        {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":830,"y":485,"url":"blog/self-attention-from-scratch.html"}
+      ],
+      "links": [
+        {"source":"neural-networks","target":"computer-vision"},
+        {"source":"neural-networks","target":"sequence-models"},
+        {"source":"neural-networks","target":"attention"},
+        {"source":"neural-networks","target":"shallow-nn"},
+        {"source":"neural-networks","target":"rnn"},
+        {"source":"neural-networks","target":"self-attention"},
+        {"source":"computer-vision","target":"shallow-nn"},
+        {"source":"sequence-models","target":"rnn"},
+        {"source":"sequence-models","target":"self-attention"},
+        {"source":"attention","target":"self-attention"}
+      ]
+    }
   </script>
 </body>
 </html>
