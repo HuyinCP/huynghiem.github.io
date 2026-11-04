@@ -18,6 +18,10 @@
   const cards = [...document.querySelectorAll(".graph-project-card")];
   let dragState = null;
   let suppressClick = false;
+  let simulationFrame;
+  let panState = null;
+  let panX = 0;
+  let panY = 0;
   const projectCount = data.nodes.filter((node) => node.type === "project").length;
   const topicCount = data.nodes.filter((node) => node.type === "topic").length;
   document.getElementById("graph-project-count").textContent = `${projectCount} ${projectCount === 1 ? "project" : "projects"}`;
@@ -31,9 +35,15 @@
     return element;
   };
 
+  const canvas = createSvgElement("g", { class: "graph-canvas" });
   const linksLayer = createSvgElement("g", { class: "graph-links" });
   const nodesLayer = createSvgElement("g", { class: "graph-map-nodes" });
-  svg.append(linksLayer, nodesLayer);
+  canvas.append(linksLayer, nodesLayer);
+  svg.append(canvas);
+
+  const updateCanvasPosition = () => {
+    canvas.setAttribute("transform", `translate(${panX} ${panY})`);
+  };
 
   const curvePath = (sourceNode, targetNode, offset = 0) => {
     const dx = targetNode.x - sourceNode.x;
@@ -85,9 +95,71 @@
       });
       const label = group.querySelector("text");
       label.setAttribute("x", node.x);
-      label.setAttribute("y", node.y + (node.type === "project" ? 51 : node.id === "neural-networks" ? 57 : 46));
+      label.setAttribute("y", node.y + (node.type === "project" ? 42 : node.id === "neural-networks" ? 48 : 39));
       label.querySelectorAll("tspan").forEach((span) => span.setAttribute("x", node.x));
     }
+  };
+
+  const startSimulation = () => {
+    data.nodes.forEach((node, index) => {
+      node.vx = ((index % 3) - 1) * 0.25;
+      node.vy = ((index % 2) ? 1 : -1) * 0.2;
+    });
+    let alpha = 0.9;
+    const tick = () => {
+      if (alpha < 0.015) return;
+      const forces = new Map(data.nodes.map((node) => [node.id, { x: 0, y: 0 }]));
+
+      for (let i = 0; i < data.nodes.length; i += 1) {
+        for (let j = i + 1; j < data.nodes.length; j += 1) {
+          const a = data.nodes[i];
+          const b = data.nodes[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const distance = Math.max(Math.hypot(dx, dy), 1);
+          const strength = 900 / (distance * distance);
+          const fx = (dx / distance) * strength;
+          const fy = (dy / distance) * strength;
+          forces.get(a.id).x -= fx;
+          forces.get(a.id).y -= fy;
+          forces.get(b.id).x += fx;
+          forces.get(b.id).y += fy;
+        }
+      }
+
+      for (const link of linkElements) {
+        const sourceNode = nodesById.get(link.source);
+        const targetNode = nodesById.get(link.target);
+        const dx = targetNode.x - sourceNode.x;
+        const dy = targetNode.y - sourceNode.y;
+        const distance = Math.max(Math.hypot(dx, dy), 1);
+        const stretch = (distance - 145) * 0.012;
+        const fx = (dx / distance) * stretch;
+        const fy = (dy / distance) * stretch;
+        forces.get(sourceNode.id).x += fx;
+        forces.get(sourceNode.id).y += fy;
+        forces.get(targetNode.id).x -= fx;
+        forces.get(targetNode.id).y -= fy;
+      }
+
+      for (const node of data.nodes) {
+        const force = forces.get(node.id);
+        if (dragState?.node === node) {
+          node.vx = 0;
+          node.vy = 0;
+          continue;
+        }
+        node.vx = (node.vx + force.x + (500 - node.x) * 0.0008) * 0.86;
+        node.vy = (node.vy + force.y + (310 - node.y) * 0.0008) * 0.86;
+        node.x = Math.max(45, Math.min(955, node.x + node.vx * alpha));
+        node.y = Math.max(45, Math.min(585, node.y + node.vy * alpha));
+      }
+      alpha *= 0.985;
+      updateGraph();
+      simulationFrame = requestAnimationFrame(tick);
+    };
+    cancelAnimationFrame(simulationFrame);
+    simulationFrame = requestAnimationFrame(tick);
   };
 
   const pointerPosition = (event) => {
@@ -141,7 +213,7 @@
     if (isProject) group.setAttribute("href", node.url);
     else group.setAttribute("tabindex", "0");
 
-    const radius = node.id === "neural-networks" ? 27 : isProject ? 21 : 16;
+    const radius = node.id === "neural-networks" ? 18 : isProject ? 12 : 9;
     group.append(
       createSvgElement("circle", { cx: node.x, cy: node.y, r: radius + 11, class: "graph-node-halo" }),
       createSvgElement("circle", { cx: node.x, cy: node.y, r: radius, class: "graph-node-core" })
@@ -169,7 +241,9 @@
     group.addEventListener("blur", resetHighlight);
     group.addEventListener("pointerdown", (event) => {
       event.preventDefault();
+      event.stopPropagation();
       dragState = { node, startX: event.clientX, startY: event.clientY, moved: false };
+      startSimulation();
       group.setPointerCapture(event.pointerId);
       group.classList.add("is-dragging");
     });
@@ -200,6 +274,29 @@
   }
 
   updateGraph();
+  startSimulation();
+
+  svg.addEventListener("pointerdown", (event) => {
+    if (event.target !== svg) return;
+    panState = { clientX: event.clientX, clientY: event.clientY, startX: panX, startY: panY };
+    svg.setPointerCapture(event.pointerId);
+    svg.classList.add("is-panning");
+  });
+
+  svg.addEventListener("pointermove", (event) => {
+    if (!panState) return;
+    const bounds = svg.getBoundingClientRect();
+    panX = panState.startX + ((event.clientX - panState.clientX) / bounds.width) * 1000;
+    panY = panState.startY + ((event.clientY - panState.clientY) / bounds.height) * 620;
+    updateCanvasPosition();
+  });
+
+  svg.addEventListener("pointerup", (event) => {
+    if (!panState) return;
+    panState = null;
+    svg.classList.remove("is-panning");
+    svg.releasePointerCapture(event.pointerId);
+  });
 
   for (const card of cards) {
     card.addEventListener("mouseenter", () => highlight(card.dataset.project));

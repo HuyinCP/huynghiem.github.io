@@ -547,7 +547,10 @@ a:focus-visible {
   min-width: 720px;
   height: 440px;
   min-height: 360px;
+  cursor: grab;
 }
+
+#knowledge-graph.is-panning { cursor: grabbing; }
 
 .graph-link {
   fill: none;
@@ -579,6 +582,7 @@ a:focus-visible {
 
 .graph-node-halo {
   fill: #f1ebf7;
+  opacity: .7;
 }
 
 .graph-node-core {
