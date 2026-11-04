@@ -46,11 +46,86 @@ Really quickly, though, here’s a cool visualization of how our ViT learns to c
 
 <h2 id="self-attention">1. Quick Recap on How Self-Attention Works</h2>
 
+<p>In the Self-Attention mechanism, we represent words as vectors in an embedding space. By considering the context of other words, a machine-learning model can learn better word embeddings and improve its performance on NLP tasks.</p>
+
+<p>To consider the context of other words, we compare the embedding vectors and calculate their similarity scores. In the embedding space, similar tokens share similar locations, so token vectors that are close together will have a higher similarity score.</p>
+
+<p>As we pass word embeddings through self-attention in Transformer encoder blocks, the position of each embedding vector is updated to better reflect the meaning of its token in context, based on the other relevant words in the same sentence.</p>
+
+<p>Recall this diagram from the previous Self-Attention project:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/vit/2.png" alt="Self-attention mechanism showing token vectors and attention scores">
+  <figcaption>Figure 2. Self-attention updates token representations using context.</figcaption>
+</figure>
+
+<p>The initial embedding for the token “Apple” is the same for each possible interpretation of “Apple”, whether it refers to a fruit or a technology brand. By passing the tokens through attention encoder blocks, the “Apple” token is pushed towards its context-based meaning. The encoder with attention layers can therefore add contextual meaning to embeddings.</p>
+
+<p>Usually, Transformer-based architectures contain several encoder blocks. Each encoder block consists of normalization layers, multi-head attention layers, and a multilayer perceptron (MLP) component.</p>
+
+<p>Each encoder block encodes more information into the embeddings by taking context into account, producing a deeper semantic representation of each token. At the end of this process, we get optimized and improved embeddings.</p>
+
+<p>To transform these information-rich embeddings into useful predictions, we need a final set of layers, usually called the “head”. Different heads are used for different tasks, such as classification, question answering, and Named Entity Recognition (NER).</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/vit/3.png" alt="Transformer encoder blocks and task-specific prediction head">
+  <figcaption>Figure 3. Transformer encoder blocks followed by a task-specific head.</figcaption>
+</figure>
+
+<p>The Vision Transformer works similarly, but rather than taking word tokens as input, the ViT takes image patches. Aside from that, the overall Transformer architecture remains very similar for the ViT.</p>
+
+<p>Next, we’ll overview the ViT architecture and make sense of its core components.</p>
+
 <h2 id="vit-overview">2. Overview of the Vision Transformer Architecture</h2>
+
+<p>This is the overall Vision Transformer architecture:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/vit/4.png" alt="Overall Vision Transformer architecture from image patches to classification">
+  <figcaption>Figure 4. The overall Vision Transformer architecture.</figcaption>
+</figure>
+
+<p>The Vision Transformer (ViT) is inspired by Transformer architectures used in NLP, particularly BERT, an encoder-only Transformer model.</p>
+
+<p>The key idea behind ViT is to represent an image as a sequence of smaller, non-overlapping image patches. These patches are treated as input tokens, similar to words in NLP. Their embeddings are then processed by a Transformer, enabling the network to capture spatial relationships and patterns across the entire image.</p>
+
+<p>Looking at the overall diagram, we can break the ViT into the following series of components and steps:</p>
+
+<ol>
+  <li>Transform input images into embeddings</li>
+  <li>Pass the embeddings through the Transformer Encoder</li>
+  <li>Perform image classification with the CLS token</li>
+</ol>
+
+<p>Next, we will cover the relevant theory for each portion while implementing the model in code as we go along.</p>
 
 <h2 id="implementation">3. Code-along Each Portion of the ViT</h2>
 
+<p>The changes introduced by the ViT are mostly limited to the first few processing steps, so most of the accompanying theoretical explanation will focus on Section 3.1 below.</p>
+
 <h3 id="embeddings">3.1 Transform Input Images into Embeddings</h3>
+
+<p>We need to take an input image and first process it into a set of patch embeddings.</p>
+
+<p>Some might ask: why not go more granular and feed the pixel values of the image directly into the model? Self-attention requires comparing every input token with every other token in order to learn context. If we process a small $32 \times 32$ image at the pixel level, we would have $32^2 = 1{,}024$ individual pixel tokens. Since self-attention has quadratic complexity, each token attends to every other token, resulting in $1{,}024^2 = 1{,}048{,}576$ attention computations per layer. That is only for a single attention layer in a multi-layer Transformer, making pixel-level processing computationally impractical.</p>
+
+<p>Instead, we partition the image into patches and treat each patch as a token. These patches are embedded into a lower-dimensional representation, significantly reducing the number of tokens while still capturing meaningful spatial information before further processing.</p>
+
+<p>Here is a high-level overview of the steps we need to take:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/vit/5.png" alt="Vision Transformer image patch embedding pipeline">
+  <figcaption>Figure 5. From image patches to position-aware token embeddings.</figcaption>
+</figure>
+
+<ol>
+  <li>Split the image into non-overlapping image patches.</li>
+  <li>Embed patches into lower-dimensional embeddings through a linear projection.</li>
+  <li>Prepend a trainable class embedding to the set of patch embeddings.</li>
+  <li>Sum the patch embeddings with learned positional embeddings.</li>
+</ol>
+
+<p>After these steps, the patch embeddings are processed like token embeddings in a typical Transformer. Let’s cover each sub-step in more detail.</p>
 
 <h3 id="encoder">3.2 Pass through the Transformer Encoder</h3>
 
