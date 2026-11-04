@@ -22,7 +22,7 @@
       <p class="graph-eyebrow">Knowledge Graph <span aria-hidden="true">/</span> 01</p>
       <h1>Explore the connections.</h1>
       <p>Follow the ideas behind my projects, from neural networks to sequence models and self-attention.</p>
-      <div class="graph-counts"><span id="graph-project-count">3 projects</span><span id="graph-topic-count">4 topics</span></div>
+      <div class="graph-counts"><span id="graph-project-count">4 projects</span><span id="graph-topic-count">5 topics</span></div>
     </header>
 
     <section class="graph-panel" aria-labelledby="graph-title">
@@ -58,6 +58,10 @@
           <span class="graph-card-number">03</span>
           <span><strong>Self-Attention Mechanism from Scratch</strong><small>Sequence Models · Attention</small></span>
         </a>
+        <a class="graph-project-card" data-project="lstm" href="blog/lstm-from-scratch.html">
+          <span class="graph-card-number">04</span>
+          <span><strong>Long Short-Term Memory from Scratch</strong><small>Sequence Models · Recurrent Networks</small></span>
+        </a>
       </div>
     </section>
   </main>
@@ -69,9 +73,11 @@
         {"id":"computer-vision","type":"topic","label":"Computer Vision","x":170,"y":275},
         {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":290},
         {"id":"attention","type":"topic","label":"Attention","x":830,"y":275},
+        {"id":"memory","type":"topic","label":"Long-Term Memory","x":500,"y":405},
         {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":170,"y":485,"url":"blog/shallow-nn-from-scratch.html"},
         {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":500,"y":490,"url":"blog/rnn-from-scratch.html"},
         {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":830,"y":485,"url":"blog/self-attention-from-scratch.html"}
+        ,{"id":"lstm","type":"project","label":"LSTM from Scratch","x":500,"y":565,"url":"blog/lstm-from-scratch.html"}
       ],
       "links": [
         {"source":"neural-networks","target":"computer-vision"},
@@ -84,6 +90,10 @@
         {"source":"sequence-models","target":"rnn"},
         {"source":"sequence-models","target":"self-attention"},
         {"source":"attention","target":"self-attention"}
+        ,{"source":"sequence-models","target":"memory"},
+        {"source":"memory","target":"rnn"},
+        {"source":"memory","target":"lstm"},
+        {"source":"sequence-models","target":"lstm"}
       ]
     }
   </script>
