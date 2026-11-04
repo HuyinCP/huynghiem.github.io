@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=swap");
+
 :root {
   color-scheme: light;
   --ink: #302b35;
@@ -14,14 +16,14 @@
 
 html {
   color: rgba(0, 0, 0, 0.8);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family: "Lato", Verdana, Helvetica, sans-serif;
+  line-height: 1.55;
 }
 
 body {
   margin: 0;
   background: #fffefd;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 a {
@@ -57,7 +59,7 @@ a:focus-visible {
 .nav a {
   color: var(--muted);
   font-size: 13px;
-  font-weight: 550;
+  font-weight: 400;
   line-height: 1.6;
   text-decoration: none;
 }
@@ -85,8 +87,8 @@ a:focus-visible {
   margin: 0 0 22px;
   color: var(--ink);
   font-size: clamp(40px, 5.6vw, 64px);
-  font-weight: 650;
-  letter-spacing: -0.06em;
+  font-weight: 700;
+  letter-spacing: -0.035em;
   line-height: 1.06;
 }
 
@@ -100,20 +102,23 @@ a:focus-visible {
 
 .home-copy .home-lead {
   color: var(--ink) !important;
-  font-size: 19px !important;
-  line-height: 1.55 !important;
+  font-size: 18px !important;
+  line-height: 1.6 !important;
 }
 
 .profile-photo {
   display: block;
   width: 100%;
-  height: clamp(300px, 32vw, 460px);
+  height: auto;
+  aspect-ratio: 1;
   object-fit: cover;
   object-position: center 35%;
   margin: 0;
 }
 
 .home-portrait {
+  width: min(100%, 340px);
+  justify-self: center;
   padding: 12px;
   background: #fcfbfe;
   border: 1px solid #ebe8f0;
@@ -165,6 +170,29 @@ a:focus-visible {
   line-height: 1.65;
 }
 
+.travel-list {
+  margin-top: 52px;
+  border-top: 1px solid var(--line);
+}
+
+.travel-entry {
+  padding: 28px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.travel-entry h2 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 24px;
+  letter-spacing: -.02em;
+}
+
+.travel-entry p:last-child {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .intro {
   max-width: 650px;
   min-height: 92px;
@@ -194,8 +222,7 @@ a:focus-visible {
   border-bottom: 1px solid var(--line);
 }
 
-.listing::before { position: absolute; left: 4px; top: 34px; width: 5px; height: 5px; background: #aa8ad0; border-radius: 50%; content: ""; }
-.listing h2, .listing-date, .listing-description { grid-column: 1; margin-left: 18px; }
+.listing h2, .listing-date, .listing-description { grid-column: 1; }
 .listing > a:has(.project-image) { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
 
 .listing h2 {
@@ -203,6 +230,7 @@ a:focus-visible {
   margin-bottom: 8px;
   font-size: clamp(19px, 2vw, 23px);
   font-weight: 700;
+  letter-spacing: -0.015em;
   line-height: 1.3;
 }
 
@@ -235,7 +263,7 @@ a:focus-visible {
 .listing h2,
 .listing .listing-date,
 .listing .listing-description {
-  margin-left: 18px;
+  margin-left: 0;
 }
 
 .project-image {
@@ -266,7 +294,7 @@ a:focus-visible {
 .article h1 {
   margin: 0 0 12px;
   font-size: clamp(36px, 5vw, 52px);
-  letter-spacing: -.05em;
+  letter-spacing: -.035em;
   line-height: 1.2;
 }
 
@@ -517,8 +545,8 @@ a:focus-visible {
   display: block;
   width: 100%;
   min-width: 720px;
-  height: auto;
-  min-height: 440px;
+  height: 440px;
+  min-height: 360px;
 }
 
 .graph-link {
@@ -540,7 +568,10 @@ a:focus-visible {
 .graph-map-node {
   cursor: pointer;
   transition: opacity 180ms ease;
+  touch-action: none;
 }
+
+.graph-map-node.is-dragging { cursor: grabbing; }
 
 .graph-map-node.is-muted {
   opacity: 0.25;
@@ -656,7 +687,7 @@ a:focus-visible {
   }
 
   .home-portrait {
-    width: min(100%, 520px);
+    width: min(100%, 340px);
   }
 
   .profile-photo {
@@ -687,7 +718,7 @@ a:focus-visible {
   }
 
   .listing { grid-template-columns: 1fr; gap: 0; }
-  .listing > a:has(.project-image) { grid-column: 1; grid-row: auto; margin: 20px 0 0 18px; max-width: 350px; }
+  .listing > a:has(.project-image) { grid-column: 1; grid-row: auto; margin: 20px 0 0; max-width: 350px; }
 
   .article {
     padding: 0 7px;

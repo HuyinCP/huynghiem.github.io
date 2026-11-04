@@ -14,6 +14,7 @@
     <a href="projects.html">Projects</a>
     <a href="blogs.html">Technical Blog</a>
     <a href="achievements.html">Achievements</a>
+    <a href="travel.html">Travel</a>
     <a href="knowledge_graph.html" aria-current="page">Knowledge Graph</a>
   </nav>
 
@@ -35,9 +36,9 @@
       </div>
       <p class="graph-swipe-hint">Swipe sideways to explore the full map.</p>
       <div class="graph-viewport" role="region" aria-label="Scrollable knowledge map" tabindex="0">
-        <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics connected to three projects" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
+        <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics connected to five projects" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
       </div>
-      <p class="graph-hint">Explore a node to trace its connections. Select a project to read its full write-up.</p>
+      <p class="graph-hint">Hover to trace connections. Drag nodes to rearrange the map. Select a project to read its full write-up.</p>
     </section>
 
     <section class="graph-directory wrap" aria-labelledby="graph-projects-title">
@@ -62,6 +63,10 @@
           <span class="graph-card-number">04</span>
           <span><strong>Long Short-Term Memory from Scratch</strong><small>Sequence Models · Recurrent Networks</small></span>
         </a>
+        <a class="graph-project-card" data-project="vit" href="blog/vision-transformer-from-scratch.html">
+          <span class="graph-card-number">05</span>
+          <span><strong>Vision Transformer from Scratch</strong><small>Computer Vision · Attention</small></span>
+        </a>
       </div>
     </section>
   </main>
@@ -70,14 +75,15 @@
     {
       "nodes": [
         {"id":"neural-networks","type":"topic","label":"Neural Networks","x":500,"y":110},
-        {"id":"computer-vision","type":"topic","label":"Computer Vision","x":170,"y":275},
-        {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":290},
-        {"id":"attention","type":"topic","label":"Attention","x":830,"y":275},
-        {"id":"memory","type":"topic","label":"Long-Term Memory","x":500,"y":405},
-        {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":170,"y":485,"url":"blog/shallow-nn-from-scratch.html"},
-        {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":500,"y":490,"url":"blog/rnn-from-scratch.html"},
-        {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":830,"y":485,"url":"blog/self-attention-from-scratch.html"}
-        ,{"id":"lstm","type":"project","label":"LSTM from Scratch","x":500,"y":565,"url":"blog/lstm-from-scratch.html"}
+        {"id":"computer-vision","type":"topic","label":"Computer Vision","x":230,"y":245},
+        {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":245},
+        {"id":"attention","type":"topic","label":"Attention","x":770,"y":245},
+        {"id":"memory","type":"topic","label":"Long-Term Memory","x":500,"y":360},
+        {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":170,"y":500,"url":"blog/shallow-nn-from-scratch.html"},
+        {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":390,"y":500,"url":"blog/rnn-from-scratch.html"},
+        {"id":"lstm","type":"project","label":"LSTM from Scratch","x":610,"y":500,"url":"blog/lstm-from-scratch.html"},
+        {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":830,"y":500,"url":"blog/self-attention-from-scratch.html"},
+        {"id":"vit","type":"project","label":"Vision Transformer","x":770,"y":590,"url":"blog/vision-transformer-from-scratch.html"}
       ],
       "links": [
         {"source":"neural-networks","target":"computer-vision"},
@@ -89,8 +95,10 @@
         {"source":"computer-vision","target":"shallow-nn"},
         {"source":"sequence-models","target":"rnn"},
         {"source":"sequence-models","target":"self-attention"},
-        {"source":"attention","target":"self-attention"}
-        ,{"source":"sequence-models","target":"memory"},
+        {"source":"attention","target":"self-attention"},
+        {"source":"attention","target":"vit"},
+        {"source":"computer-vision","target":"vit"},
+        {"source":"sequence-models","target":"memory"},
         {"source":"memory","target":"rnn"},
         {"source":"memory","target":"lstm"},
         {"source":"sequence-models","target":"lstm"}

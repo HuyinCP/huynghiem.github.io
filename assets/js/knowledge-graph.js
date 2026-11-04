@@ -16,6 +16,8 @@
   const nodeElements = new Map();
   const linkElements = [];
   const cards = [...document.querySelectorAll(".graph-project-card")];
+  let dragState = null;
+  let suppressClick = false;
   const projectCount = data.nodes.filter((node) => node.type === "project").length;
   const topicCount = data.nodes.filter((node) => node.type === "topic").length;
   document.getElementById("graph-project-count").textContent = `${projectCount} ${projectCount === 1 ? "project" : "projects"}`;
@@ -33,19 +35,26 @@
   const nodesLayer = createSvgElement("g", { class: "graph-map-nodes" });
   svg.append(linksLayer, nodesLayer);
 
-  for (const link of data.links) {
+  const curvePath = (sourceNode, targetNode, offset = 0) => {
+    const dx = targetNode.x - sourceNode.x;
+    const dy = targetNode.y - sourceNode.y;
+    const length = Math.max(Math.hypot(dx, dy), 1);
+    const midpointX = (sourceNode.x + targetNode.x) / 2 - (dy / length) * offset;
+    const midpointY = (sourceNode.y + targetNode.y) / 2 + (dx / length) * offset;
+    return `M ${sourceNode.x} ${sourceNode.y} Q ${midpointX} ${midpointY} ${targetNode.x} ${targetNode.y}`;
+  };
+
+  for (const [index, link] of data.links.entries()) {
     const sourceNode = nodesById.get(link.source);
     const targetNode = nodesById.get(link.target);
     if (!sourceNode || !targetNode) continue;
 
-    const midpointX = (sourceNode.x + targetNode.x) / 2;
-    const midpointY = (sourceNode.y + targetNode.y) / 2 - 18;
     const path = createSvgElement("path", {
-      d: `M ${sourceNode.x} ${sourceNode.y} Q ${midpointX} ${midpointY} ${targetNode.x} ${targetNode.y}`,
+      d: curvePath(sourceNode, targetNode, (index % 3 - 1) * 12),
       class: "graph-link"
     });
     linksLayer.append(path);
-    linkElements.push({ ...link, element: path });
+    linkElements.push({ ...link, element: path, curveOffset: (index % 3 - 1) * 12 });
   }
 
   const splitLabel = (label) => {
@@ -57,6 +66,36 @@
       else lines[lines.length - 1] = current ? `${current} ${word}` : word;
     }
     return lines;
+  };
+
+  const updateGraph = () => {
+    for (const link of linkElements) {
+      const sourceNode = nodesById.get(link.source);
+      const targetNode = nodesById.get(link.target);
+      link.element.setAttribute("d", curvePath(sourceNode, targetNode, link.curveOffset));
+    }
+
+    for (const node of data.nodes) {
+      const group = nodeElements.get(node.id);
+      if (!group) continue;
+      const circles = group.querySelectorAll("circle");
+      circles.forEach((circle) => {
+        circle.setAttribute("cx", node.x);
+        circle.setAttribute("cy", node.y);
+      });
+      const label = group.querySelector("text");
+      label.setAttribute("x", node.x);
+      label.setAttribute("y", node.y + (node.type === "project" ? 51 : node.id === "neural-networks" ? 57 : 46));
+      label.querySelectorAll("tspan").forEach((span) => span.setAttribute("x", node.x));
+    }
+  };
+
+  const pointerPosition = (event) => {
+    const bounds = svg.getBoundingClientRect();
+    return {
+      x: ((event.clientX - bounds.left) / bounds.width) * 1000,
+      y: ((event.clientY - bounds.top) / bounds.height) * 620
+    };
   };
 
   const resetHighlight = () => {
@@ -128,10 +167,39 @@
     group.addEventListener("mouseleave", resetHighlight);
     group.addEventListener("focus", () => highlight(node.id));
     group.addEventListener("blur", resetHighlight);
+    group.addEventListener("pointerdown", (event) => {
+      event.preventDefault();
+      dragState = { node, startX: event.clientX, startY: event.clientY, moved: false };
+      group.setPointerCapture(event.pointerId);
+      group.classList.add("is-dragging");
+    });
+    group.addEventListener("pointermove", (event) => {
+      if (!dragState || dragState.node !== node) return;
+      if (Math.hypot(event.clientX - dragState.startX, event.clientY - dragState.startY) > 4) dragState.moved = true;
+      const position = pointerPosition(event);
+      node.x = Math.max(55, Math.min(945, position.x));
+      node.y = Math.max(55, Math.min(575, position.y));
+      updateGraph();
+    });
+    group.addEventListener("pointerup", (event) => {
+      if (!dragState || dragState.node !== node) return;
+      suppressClick = dragState.moved;
+      dragState = null;
+      group.classList.remove("is-dragging");
+      group.releasePointerCapture(event.pointerId);
+    });
+    group.addEventListener("click", (event) => {
+      if (suppressClick) {
+        event.preventDefault();
+        suppressClick = false;
+      }
+    });
 
     nodesLayer.append(group);
     nodeElements.set(node.id, group);
   }
+
+  updateGraph();
 
   for (const card of cards) {
     card.addEventListener("mouseenter", () => highlight(card.dataset.project));
