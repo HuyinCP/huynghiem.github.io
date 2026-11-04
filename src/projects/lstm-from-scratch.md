@@ -67,6 +67,150 @@ Given the foundational knowledge of RNNs established in the previous project, we
 
 <p>LSTMs also have this chain-like structure, but the repeating module has a more complicated internal structure. Instead of the single tanh neural network layer used earlier, the LSTM repeating module has four components:</p>
 
+<figure class="article-figure">
+  <img src="../assets/images/lstm/3.png" alt="An LSTM repeating module with multiple internal components">
+  <figcaption>Figure 3. An LSTM repeating module and its internal components.</figcaption>
+</figure>
+
+<p>Wow, things got complicated fast. We’ll go into more detail in the next few steps. But for now, the key takeaway is that we now have tanh and sigmoid $\sigma$ activation functions in our repeating module.</p>
+
+<p>There is also a new input/output at the top of the repeating module, giving us a total of three outputs: two outputs to the next repeating module, and one output to node $y$ (colored in green).</p>
+
+<p>Let’s zoom into a single repeating module for now and add some labels so we can describe each component. We call this a single LSTM cell:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/lstm/4.png" alt="A labeled LSTM cell showing gates, weights, biases, and cell-state inputs and outputs">
+  <figcaption>Figure 4. A labeled LSTM cell.</figcaption>
+</figure>
+
+<p>Notice the weight and bias inputs for each activation block within the cell. We also see the activated outputs, $f$, $i$, $g$, and $o$. We see the usual $h^{\langle t-1\rangle}$, $x^{\langle t\rangle}$, and $h^{\langle t\rangle}$ inputs and outputs. Finally, there is a new pair of inputs and outputs in the form of $c^{\langle t-1\rangle}$ and $c^{\langle t\rangle}$.</p>
+
+<p>We’ll understand how the LSTM works by going through each core component. Let’s begin with the new inputs and outputs, $c^{\langle t-1\rangle}$ and $c^{\langle t\rangle}$.</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/lstm/6.png" alt="The cell state flowing through an LSTM cell">
+  <figcaption>Figure 5. The cell state flowing through an LSTM cell.</figcaption>
+</figure>
+
+<p>This component, called the “cell state”, is central to the LSTM architecture. It is shown as a horizontal line passing through the top of the LSTM cell, and it goes through only two minor linear interactions, represented by the white pieces.</p>
+
+<p>The cell state passes information through, and the LSTM can add or remove information from the cell state through the linear interactions described above.</p>
+
+<p>LSTMs control the addition and removal of information through “gates”. These gates are composed of a sigmoid neural network layer and a Hadamard product, or element-wise multiplication operation.</p>
+
+<p>Let’s walk through each of these gates. Along the way, we’ll build an intuition for how they control information flow with the sigmoid activation.</p>
+
+<p>We’ll begin with the “Forget Gate”. It is called the Forget Gate because it decides which information to forget, or remove, from the cell state. It looks like this:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/lstm/7.png" alt="The LSTM Forget Gate with its sigmoid equation">
+  <figcaption>Figure 6. The Forget Gate and its sigmoid activation.</figcaption>
+</figure>
+
+<p>The sigmoid layer takes in $h^{\langle t-1\rangle}$ and $x^{\langle t\rangle}$, then outputs $f_t$, where:</p>
+
+<div class="equation-block" role="math" aria-label="LSTM Forget Gate equation">
+  \[
+    f_t = \sigma\!\left(W_{fx}x^{\langle t\rangle} + W_{fh}h^{\langle t-1\rangle} + b_f\right)
+  \]
+</div>
+
+<p>The Forget Gate’s output $f_t$ has the same dimensionality as the previous cell state $C_{t-1}$. Since $f_t$ uses the sigmoid activation function, all of its values are forced between 0 and 1. Then, an element-wise multiplication happens between $c_{t-1}$ and $f_t$.</p>
+
+<p>Let’s try to understand intuitively why this sigmoid activation and element-wise multiplication help us decide what information to get rid of and what to keep.</p>
+
+<p>Given a matrix representing the values in cell state $C_{t-1}$ and a matrix representing the values in $f_t$, here’s how the element-wise multiplication might look:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/lstm/8.png" alt="Element-wise Forget Gate weights applied to cell-state values">
+  <figcaption>Figure 7. Forget Gate weights applied to cell-state values.</figcaption>
+</figure>
+
+<p>We can see that the matrix values in $f_t$ function as “weight” values, with larger values representing higher importance and smaller values representing lower importance. A value of 1 would mean completely keeping the corresponding information, while a value of 0 would mean completely removing it. The element-wise multiplication therefore weights the “memory” values in the cell state, helping us decide which memories to keep and discard.</p>
+
+<p>Since the sigmoid values are between 0 and 1, the multiplication operation mostly helps us lower the importance of selected pieces of information. This is why this section is called the Forget Gate.</p>
+
+<p>Now that we know how the Forget Gate works, let’s move on to the next section, involving the Input Gate and Input Node.</p>
+
+<p>Here’s how the Input Gate (red) and Input Node (green) look:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/lstm/9.png" alt="LSTM Input Gate and Input Node">
+  <figcaption>Figure 8. The Input Gate and Input Node.</figcaption>
+</figure>
+
+<p>Whereby we have:</p>
+
+<div class="equation-block" role="math" aria-label="LSTM Input Gate equation">
+  \[
+    i_t = \sigma\!\left(W_{ix}x^{\langle t\rangle} + W_{ih}h^{\langle t-1\rangle} + b_i\right)
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="LSTM Input Node equation">
+  \[
+    g_t = \tanh\!\left(W_{gx}x^{\langle t\rangle} + W_{gh}h^{\langle t-1\rangle} + b_g\right)
+  \]
+</div>
+
+<p>As we’ve seen from the sigmoid activation, the values of $i_t$ are squeezed between 0 and 1. Meanwhile, the values of $g_t$ are between -1 and 1, thanks to the tanh activation.</p>
+
+<p>$i_t$ and $g_t$ go through element-wise multiplication, and the result is then added element-wise to our cell state.</p>
+
+<p>Let’s imagine how $i_t$ and $g_t$ work, in a similar manner to how we understood the Forget Gate:</p>
+
+<ol>
+  <li>The Input Node $g_t$ is computed as $g_t = \tanh(W_{gx}x^{\langle t\rangle} + W_{gh}h^{\langle t-1\rangle} + b_g)$ and produces values between -1 and 1. Positive values reinforce a certain memory, while negative values represent an opposing adjustment to the selected memory value. We can think of the input node as raw suggestions for what should be remembered or adjusted in the cell state.</li>
+  <li>The Input Gate $i_t$, which has a sigmoid activation, produces values between 0 and 1. Similarly to the Forget Gate, these values act as “importance weights”.</li>
+  <li>We perform the element-wise multiplication of $i_t$ and $g_t$, producing a matrix containing positive and negative values weighted by their importance.</li>
+  <li>Finally, we perform an element-wise addition of $(i_t \odot g_t)$ to our cell state.</li>
+</ol>
+
+<p>Therefore, the Input Node and Input Gate work together to introduce new information to our cell state and modify existing information. The positive values represent new information, while the negative values represent corrective updates to the existing memory. Without the negative values from tanh, LSTMs could only increase memory, never correct or reduce it.</p>
+
+<p>After going through the Forget Gate, Input Gate, and Input Node, we have our new cell state, $C^{\langle t\rangle}$. To summarize all the operations:</p>
+
+<div class="equation-block" role="math" aria-label="LSTM cell state update equation">
+  \[
+    C^{\langle t\rangle} = \left(C^{\langle t-1\rangle} \odot f_t\right) \oplus \left(i_t \odot g_t\right)
+  \]
+</div>
+
+<p>We can see how $f_t$, $i_t$, and $g_t$ have contributed to the new cell state $C^{\langle t\rangle}$.</p>
+
+<p>Finally, we need to understand how the Output Gate updates the value of the hidden units to produce $h^{\langle t\rangle}$.</p>
+
+<p>The relevant parts are highlighted, with the Output Gate shown in red:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/lstm/10.png" alt="The LSTM Output Gate and hidden-state update equations">
+  <figcaption>Figure 9. The Output Gate and hidden-state update.</figcaption>
+</figure>
+
+<p>The Output Gate produces $O_t$, which is simply:</p>
+
+<div class="equation-block" role="math" aria-label="LSTM Output Gate equation">
+  \[
+    O_t = \sigma\!\left(W_{ox}x^{\langle t\rangle} + W_{oh}h^{\langle t-1\rangle} + b_o\right)
+  \]
+</div>
+
+<p>Then, to obtain the intended updated hidden state $h^{\langle t\rangle}$, we perform the element-wise multiplication of $O_t$ and the tanh-activated updated cell state $C^{\langle t\rangle}$:</p>
+
+<div class="equation-block" role="math" aria-label="LSTM hidden-state update equation">
+  \[
+    h^{\langle t\rangle} = O_t \odot \tanh\!\left(C^{\langle t\rangle}\right)
+  \]
+</div>
+
+<p>The Output Gate $O_t$ in an LSTM controls how much of the cell state’s information should influence the next time step’s hidden state $h^{\langle t\rangle}$. However, the raw cell state $C^{\langle t\rangle}$ is activated with tanh first, before performing an element-wise multiplication with $O_t$.</p>
+
+<p>The tanh activation of $C^{\langle t\rangle}$ regulates the range of values because the cell state represents the LSTM’s long-term memory. Cell states can contain large values and accumulate information over time, so using them directly as $h^{\langle t\rangle}$ could make the hidden state unstable.</p>
+
+<p>We need $O_t$ to act as a matrix of “importance weights” again, deciding how much of $C^{\langle t\rangle}$ should influence $h^{\langle t\rangle}$. This allows only relevant information to be passed on.</p>
+
+<p>Now that we have $h^{\langle t\rangle}$, we pass it to the next layer, such as the output layer $y^{\langle t\rangle}$, and to the hidden layer at the next time step.</p>
+
 <h2 id="forward-propagation">2. Forward Propagation</h2>
 
 <h3 id="backward-propagation">2.1 Backward Propagation</h3>
