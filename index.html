@@ -6,6 +6,7 @@
   <meta name="description" content="Home — Huy's personal website.">
   <title>Home · Huy</title>
   <link rel="stylesheet" href="assets/css/style.css">
+  <script src="assets/js/knowledge-graph.js" defer></script>
 </head>
 <body>
   <nav class="nav wrap" aria-label="Main navigation">
@@ -17,19 +18,81 @@
     <a href="knowledge_graph.html">Knowledge Graph</a>
   </nav>
 
-  <main class="wrap" id="main-content">
-    <section class="home-content" aria-label="About Huy">
-      <div class="home-copy">
-        <p class="graph-eyebrow">Hello <span aria-hidden="true">/</span> I'm Huy</p>
-        <p class="home-lead">I'm an undergraduate student studying Artificial Intelligence at HCMC University of Technology and Engineering.</p>
-        <p>I share my personal and academic projects here, along with technical blog posts about what I learn along the way.</p>
-        <p class="home-social">Find me on <a href="https://www.linkedin.com/in/quang-huy-nghiem-46ab86336">LinkedIn</a>.</p>
-        <p class="home-cv"><a href="assets/CV.pdf" target="_blank" rel="noopener noreferrer">View my CV</a></p>
-      </div>
-      <div class="home-portrait">
-        <img class="profile-photo" src="assets/images/avt.jpg" alt="Portrait of Huy">
-      </div>
-    </section>
+  <main class="wrap home-minimal" id="main-content">
+    <div class="home-split">
+      <section class="home-personal" aria-label="About Huy">
+        <img class="home-avatar" src="assets/images/avt.jpg" alt="Portrait of Huy">
+        <p class="graph-eyebrow"> </span> Nghiem Quang Huy</p>
+        <h1 class="home-title">Student at HCMC University of Technology and Engineering.</h1>
+        <p class="home-subtitle">Sharing personal projects, implementations from scratch, and technical notes along the way.</p>
+      </section>
+
+      <section class="graph-panel home-graph-panel" aria-labelledby="home-graph-title">
+        <div class="graph-panel-header">
+          <h2 id="home-graph-title">Knowledge Graph</h2>
+          <div class="graph-legend" aria-label="Map legend">
+            <span><i class="graph-key graph-key-topic"></i>Topic</span>
+            <span><i class="graph-key graph-key-project"></i>Project</span>
+          </div>
+        </div>
+        <div class="graph-viewport" role="region" aria-label="Interactive knowledge graph" tabindex="0">
+          <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics and projects" viewBox="60 20 880 630" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <p class="graph-hint">Hover to trace connections · Drag nodes to rearrange</p>
+      </section>
+    </div>
+
+    <footer class="home-link-bar" aria-label="Profile links">
+      <a class="home-bar-link" href="https://www.linkedin.com/in/quang-huy-nghiem-46ab86336" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+        <span>LinkedIn</span>
+      </a>
+      <span class="home-bar-divider" aria-hidden="true"></span>
+      <a class="home-bar-link" href="https://github.com/HuyinCP" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+        <span>GitHub</span>
+      </a>
+      <span class="home-bar-divider" aria-hidden="true"></span>
+      <a class="home-bar-link" href="assets/CV.pdf" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/></svg>
+        <span>View CV</span>
+      </a>
+    </footer>
   </main>
+
+  <script id="graph-data" type="application/json">
+    {
+      "nodes": [
+        {"id":"neural-networks","type":"topic","label":"Neural Networks","x":500,"y":110},
+        {"id":"computer-vision","type":"topic","label":"Computer Vision","x":230,"y":245},
+        {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":245},
+        {"id":"attention","type":"topic","label":"Attention","x":770,"y":245},
+        {"id":"memory","type":"topic","label":"Long-Term Memory","x":500,"y":360},
+        {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":170,"y":500,"url":"blog/shallow-nn-from-scratch.html"},
+        {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":390,"y":500,"url":"blog/rnn-from-scratch.html"},
+        {"id":"lstm","type":"project","label":"LSTM from Scratch","x":610,"y":500,"url":"blog/lstm-from-scratch.html"},
+        {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":830,"y":500,"url":"blog/self-attention-from-scratch.html"},
+        {"id":"vit","type":"project","label":"Vision Transformer","x":770,"y":590,"url":"blog/vision-transformer-from-scratch.html"}
+      ],
+      "links": [
+        {"source":"neural-networks","target":"computer-vision"},
+        {"source":"neural-networks","target":"sequence-models"},
+        {"source":"neural-networks","target":"attention"},
+        {"source":"neural-networks","target":"shallow-nn"},
+        {"source":"neural-networks","target":"rnn"},
+        {"source":"neural-networks","target":"self-attention"},
+        {"source":"computer-vision","target":"shallow-nn"},
+        {"source":"sequence-models","target":"rnn"},
+        {"source":"sequence-models","target":"self-attention"},
+        {"source":"attention","target":"self-attention"},
+        {"source":"attention","target":"vit"},
+        {"source":"computer-vision","target":"vit"},
+        {"source":"sequence-models","target":"memory"},
+        {"source":"memory","target":"rnn"},
+        {"source":"memory","target":"lstm"},
+        {"source":"sequence-models","target":"lstm"}
+      ]
+    }
+  </script>
 </body>
 </html>

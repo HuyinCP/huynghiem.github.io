@@ -23,52 +23,54 @@
       <p class="graph-eyebrow">Knowledge Graph <span aria-hidden="true">/</span> 01</p>
       <h1>Explore the connections.</h1>
       <p>Follow the ideas behind my projects, from neural networks to sequence models and self-attention.</p>
-      <div class="graph-counts"><span id="graph-project-count">4 projects</span><span id="graph-topic-count">5 topics</span></div>
+      <div class="graph-counts"><span id="graph-project-count">5 projects</span><span id="graph-topic-count">5 topics</span></div>
     </header>
 
-    <section class="graph-panel" aria-labelledby="graph-title">
-      <div class="graph-panel-header">
-        <h2 id="graph-title">Knowledge map</h2>
-        <div class="graph-legend" aria-label="Map legend">
-          <span><i class="graph-key graph-key-topic"></i>Topic</span>
-          <span><i class="graph-key graph-key-project"></i>Project</span>
+    <div class="graph-layout wrap">
+      <section class="graph-directory" aria-labelledby="graph-projects-title">
+        <div class="graph-directory-heading">
+          <p class="graph-eyebrow">Explore further</p>
+          <h2 id="graph-projects-title">Projects in this map</h2>
         </div>
-      </div>
-      <p class="graph-swipe-hint">Swipe sideways to explore the full map.</p>
-      <div class="graph-viewport" role="region" aria-label="Scrollable knowledge map" tabindex="0">
-        <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics connected to five projects" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
-      </div>
-      <p class="graph-hint">Hover to trace connections. Drag nodes to rearrange the map. Select a project to read its full write-up.</p>
-    </section>
+        <div class="graph-project-list">
+          <a class="graph-project-card" data-project="shallow-nn" href="blog/shallow-nn-from-scratch.html">
+            <span class="graph-card-number">01</span>
+            <span><strong>Neural Network from Scratch</strong><small>Neural Networks · Computer Vision</small></span>
+          </a>
+          <a class="graph-project-card" data-project="rnn" href="blog/rnn-from-scratch.html">
+            <span class="graph-card-number">02</span>
+            <span><strong>Recurrent Neural Network from Scratch</strong><small>Neural Networks · Sequence Models</small></span>
+          </a>
+          <a class="graph-project-card" data-project="self-attention" href="blog/self-attention-from-scratch.html">
+            <span class="graph-card-number">03</span>
+            <span><strong>Self-Attention Mechanism from Scratch</strong><small>Sequence Models · Attention</small></span>
+          </a>
+          <a class="graph-project-card" data-project="lstm" href="blog/lstm-from-scratch.html">
+            <span class="graph-card-number">04</span>
+            <span><strong>Long Short-Term Memory from Scratch</strong><small>Sequence Models · Recurrent Networks</small></span>
+          </a>
+          <a class="graph-project-card" data-project="vit" href="blog/vision-transformer-from-scratch.html">
+            <span class="graph-card-number">05</span>
+            <span><strong>Vision Transformer from Scratch</strong><small>Computer Vision · Attention</small></span>
+          </a>
+        </div>
+      </section>
 
-    <section class="graph-directory wrap" aria-labelledby="graph-projects-title">
-      <div class="graph-directory-heading">
-        <p class="graph-eyebrow">Explore further</p>
-        <h2 id="graph-projects-title">Projects in this map</h2>
-      </div>
-      <div class="graph-project-list">
-        <a class="graph-project-card" data-project="shallow-nn" href="blog/shallow-nn-from-scratch.html">
-          <span class="graph-card-number">01</span>
-          <span><strong>Neural Network from Scratch</strong><small>Neural Networks · Computer Vision</small></span>
-        </a>
-        <a class="graph-project-card" data-project="rnn" href="blog/rnn-from-scratch.html">
-          <span class="graph-card-number">02</span>
-          <span><strong>Recurrent Neural Network from Scratch</strong><small>Neural Networks · Sequence Models</small></span>
-        </a>
-        <a class="graph-project-card" data-project="self-attention" href="blog/self-attention-from-scratch.html">
-          <span class="graph-card-number">03</span>
-          <span><strong>Self-Attention Mechanism from Scratch</strong><small>Sequence Models · Attention</small></span>
-        </a>
-        <a class="graph-project-card" data-project="lstm" href="blog/lstm-from-scratch.html">
-          <span class="graph-card-number">04</span>
-          <span><strong>Long Short-Term Memory from Scratch</strong><small>Sequence Models · Recurrent Networks</small></span>
-        </a>
-        <a class="graph-project-card" data-project="vit" href="blog/vision-transformer-from-scratch.html">
-          <span class="graph-card-number">05</span>
-          <span><strong>Vision Transformer from Scratch</strong><small>Computer Vision · Attention</small></span>
-        </a>
-      </div>
-    </section>
+      <section class="graph-panel" aria-labelledby="graph-title">
+        <div class="graph-panel-header">
+          <h2 id="graph-title">Knowledge map</h2>
+          <div class="graph-legend" aria-label="Map legend">
+            <span><i class="graph-key graph-key-topic"></i>Topic</span>
+            <span><i class="graph-key graph-key-project"></i>Project</span>
+          </div>
+        </div>
+        <p class="graph-swipe-hint">Swipe sideways to explore the full map.</p>
+        <div class="graph-viewport" role="region" aria-label="Scrollable knowledge map" tabindex="0">
+          <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics connected to five projects" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+        <p class="graph-hint">Hover to trace connections. Drag nodes to rearrange the map.</p>
+      </section>
+    </div>
   </main>
 
   <script id="graph-data" type="application/json">

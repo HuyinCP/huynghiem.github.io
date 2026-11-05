@@ -15,17 +15,21 @@
   const nodesById = new Map(data.nodes.map((node) => [node.id, node]));
   const nodeElements = new Map();
   const linkElements = [];
-  const cards = [...document.querySelectorAll(".graph-project-card")];
   let dragState = null;
-  let suppressClick = false;
   let simulationFrame;
   let panState = null;
   let panX = 0;
   let panY = 0;
   const projectCount = data.nodes.filter((node) => node.type === "project").length;
   const topicCount = data.nodes.filter((node) => node.type === "topic").length;
-  document.getElementById("graph-project-count").textContent = `${projectCount} ${projectCount === 1 ? "project" : "projects"}`;
-  document.getElementById("graph-topic-count").textContent = `${topicCount} ${topicCount === 1 ? "topic" : "topics"}`;
+  const projectCountElement = document.getElementById("graph-project-count");
+  const topicCountElement = document.getElementById("graph-topic-count");
+  if (projectCountElement) {
+    projectCountElement.textContent = `${projectCount} ${projectCount === 1 ? "project" : "projects"}`;
+  }
+  if (topicCountElement) {
+    topicCountElement.textContent = `${topicCount} ${topicCount === 1 ? "topic" : "topics"}`;
+  }
 
   const createSvgElement = (name, attributes = {}) => {
     const element = document.createElementNS(namespace, name);
@@ -163,6 +167,11 @@
   };
 
   const pointerPosition = (event) => {
+    const ctm = canvas.getScreenCTM();
+    if (ctm) {
+      const point = new DOMPoint(event.clientX, event.clientY).matrixTransform(ctm.inverse());
+      return { x: point.x, y: point.y };
+    }
     const bounds = svg.getBoundingClientRect();
     return {
       x: ((event.clientX - bounds.left) / bounds.width) * 1000,
@@ -177,7 +186,6 @@
     for (const link of linkElements) {
       link.element.classList.remove("is-muted", "is-active");
     }
-    for (const card of cards) card.classList.remove("is-active");
   };
 
   const highlight = (id) => {
@@ -198,20 +206,16 @@
       link.element.classList.toggle("is-active", active);
       link.element.classList.toggle("is-muted", !active);
     }
-    for (const card of cards) {
-      card.classList.toggle("is-active", card.dataset.project === id);
-    }
   };
 
   for (const node of data.nodes) {
     const isProject = node.type === "project";
-    const group = createSvgElement(isProject ? "a" : "g", {
+    const group = createSvgElement("g", {
       class: `graph-map-node graph-map-${node.type}`,
       "data-node": node.id,
-      "aria-label": node.label
+      "aria-label": node.label,
+      tabindex: "0"
     });
-    if (isProject) group.setAttribute("href", node.url);
-    else group.setAttribute("tabindex", "0");
 
     const radius = node.id === "neural-networks" ? 18 : isProject ? 12 : 9;
     group.append(
@@ -233,7 +237,7 @@
     group.append(label);
 
     const title = createSvgElement("title");
-    title.textContent = isProject ? `Open project: ${node.label}` : `Topic: ${node.label}`;
+    title.textContent = isProject ? `Project: ${node.label}` : `Topic: ${node.label}`;
     group.append(title);
     group.addEventListener("mouseenter", () => highlight(node.id));
     group.addEventListener("mouseleave", resetHighlight);
@@ -242,14 +246,13 @@
     group.addEventListener("pointerdown", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      dragState = { node, startX: event.clientX, startY: event.clientY, moved: false };
+      dragState = { node };
       startSimulation();
       group.setPointerCapture(event.pointerId);
       group.classList.add("is-dragging");
     });
     group.addEventListener("pointermove", (event) => {
       if (!dragState || dragState.node !== node) return;
-      if (Math.hypot(event.clientX - dragState.startX, event.clientY - dragState.startY) > 4) dragState.moved = true;
       const position = pointerPosition(event);
       node.x = Math.max(55, Math.min(945, position.x));
       node.y = Math.max(55, Math.min(575, position.y));
@@ -257,16 +260,9 @@
     });
     group.addEventListener("pointerup", (event) => {
       if (!dragState || dragState.node !== node) return;
-      suppressClick = dragState.moved;
       dragState = null;
       group.classList.remove("is-dragging");
       group.releasePointerCapture(event.pointerId);
-    });
-    group.addEventListener("click", (event) => {
-      if (suppressClick) {
-        event.preventDefault();
-        suppressClick = false;
-      }
     });
 
     nodesLayer.append(group);
@@ -285,9 +281,15 @@
 
   svg.addEventListener("pointermove", (event) => {
     if (!panState) return;
-    const bounds = svg.getBoundingClientRect();
-    panX = panState.startX + ((event.clientX - panState.clientX) / bounds.width) * 1000;
-    panY = panState.startY + ((event.clientY - panState.clientY) / bounds.height) * 620;
+    const ctm = svg.getScreenCTM();
+    if (ctm && ctm.a && ctm.d) {
+      panX = panState.startX + (event.clientX - panState.clientX) / ctm.a;
+      panY = panState.startY + (event.clientY - panState.clientY) / ctm.d;
+    } else {
+      const bounds = svg.getBoundingClientRect();
+      panX = panState.startX + ((event.clientX - panState.clientX) / bounds.width) * 1000;
+      panY = panState.startY + ((event.clientY - panState.clientY) / bounds.height) * 620;
+    }
     updateCanvasPosition();
   });
 
@@ -297,11 +299,4 @@
     svg.classList.remove("is-panning");
     svg.releasePointerCapture(event.pointerId);
   });
-
-  for (const card of cards) {
-    card.addEventListener("mouseenter", () => highlight(card.dataset.project));
-    card.addEventListener("mouseleave", resetHighlight);
-    card.addEventListener("focus", () => highlight(card.dataset.project));
-    card.addEventListener("blur", resetHighlight);
-  }
 })();
