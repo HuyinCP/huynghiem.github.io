@@ -7,3 +7,5 @@ output: blog/self-attention-from-scratch.html
 back_url: ../projects.html
 back_label: Projects
 ---
+
+<h2 id="references">References</h2>

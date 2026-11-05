@@ -39,5 +39,3 @@ Explain your approach here. Write equations directly beside the explanation:
 Describe your results and observations here.
 
 <h2 id="references">References</h2>
-
-- Add the references you used.

@@ -22,6 +22,7 @@ Given the foundational knowledge of RNNs established in the previous project, we
     <li><a href="#backward-propagation">Backward Propagation</a></li>
     <li><a href="#gradients">How LSTMs Solve Vanishing and Exploding Gradients</a></li>
     <li><a href="#implementation">Code Implementation and Results</a></li>
+    <li><a href="#references">References</a></li>
   </ol>
 </nav>
 
@@ -218,3 +219,5 @@ Given the foundational knowledge of RNNs established in the previous project, we
 <h3 id="gradients">2.2 How LSTMs Solve Vanishing and Exploding Gradients</h3>
 
 <h2 id="implementation">3. Code Implementation and Results</h2>
+
+<h2 id="references">References</h2>

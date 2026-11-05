@@ -44,6 +44,7 @@ Here’s the structure for this project post:
       </ol>
     </li>
     <li><a href="#implementation">Code Implementation</a></li>
+    <li><a href="#references">References</a></li>
   </ol>
 </nav>
 
@@ -730,3 +731,5 @@ Here, $\alpha$ is the learning rate that we need to define and tune.
 </div>
 
 4. We repeat this process until we reach the chosen iteration limit or are satisfied with the model’s performance.
+
+<h2 id="references">References</h2>
