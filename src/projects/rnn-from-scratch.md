@@ -637,5 +637,3 @@ def rnn_step(x_t, h_prev, W_hx, W_hh, b_h):
 
 <h2 id="references">References</h2>
 
-- [Coding Owen's RNN project article](https://codingowen.github.io/projects/recurrent_nn_from_scratch/)
-- Add the books, lectures, repositories, or documentation you actually used.
