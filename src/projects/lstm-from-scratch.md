@@ -214,7 +214,418 @@ Given the foundational knowledge of RNNs established in the previous project, we
 
 <h2 id="forward-propagation">2. Forward Propagation</h2>
 
+<p>Let’s summarize everything we’ve learned so far to describe forward propagation through our LSTM cell.</p>
+
+<h3>Forget Gate</h3>
+
+<div class="equation-block" role="math" aria-label="Forget Gate forward propagation equation">
+  \[
+    f_t = \sigma\!\left(
+      W_{fx}x^{\langle t\rangle}
+      + W_{fh}h^{\langle t-1\rangle}
+      + b_f
+    \right)
+  \]
+</div>
+
+<h3>Input Gate</h3>
+
+<div class="equation-block" role="math" aria-label="Input Gate forward propagation equation">
+  \[
+    i_t = \sigma\!\left(
+      W_{ix}x^{\langle t\rangle}
+      + W_{ih}h^{\langle t-1\rangle}
+      + b_i
+    \right)
+  \]
+</div>
+
+<h3>Input Node</h3>
+
+<div class="equation-block" role="math" aria-label="Input Node forward propagation equation">
+  \[
+    g_t = \tanh\!\left(
+      W_{gx}x^{\langle t\rangle}
+      + W_{gh}h^{\langle t-1\rangle}
+      + b_g
+    \right)
+  \]
+</div>
+
+<h3>Cell State Update</h3>
+
+<div class="equation-block" role="math" aria-label="LSTM cell-state update equation">
+  \[
+    C^{\langle t\rangle}
+      = \left(C^{\langle t-1\rangle} \odot f_t\right)
+      \oplus \left(i_t \odot g_t\right)
+  \]
+</div>
+
+<h3>Output Gate</h3>
+
+<div class="equation-block" role="math" aria-label="Output Gate forward propagation equation">
+  \[
+    o_t = \sigma\!\left(
+      W_{ox}x^{\langle t\rangle}
+      + W_{oh}h^{\langle t-1\rangle}
+      + b_o
+    \right)
+  \]
+</div>
+
+<h3>Hidden State</h3>
+
+<div class="equation-block" role="math" aria-label="LSTM hidden-state equation">
+  \[
+    h^{\langle t\rangle}
+      = o_t \odot \tanh\!\left(C^{\langle t\rangle}\right)
+  \]
+</div>
+
+<p>Additionally, we need to remember that this is only for the LSTM cell. It exists as part of a larger recurrent neural network, as shown in this simplified illustration:</p>
+
+<figure class="article-figure">
+  <img src="../assets/images/lstm/11.png" alt="A recurrent neural network unfolded across three time steps with inputs, hidden states, outputs, and loss">
+  <figcaption>Figure 10. A simplified recurrent neural network containing the LSTM cell.</figcaption>
+</figure>
+
+<p>So, we also need to account for:</p>
+
+<div class="equation-block" role="math" aria-label="LSTM output-layer equations">
+  \[
+    \begin{aligned}
+      z_y^{\langle t\rangle}
+        &= W_{yh}h^{\langle t\rangle} + b_y \\
+      \hat{y}^{\langle t\rangle}
+        &= \sigma_y\!\left(z_y^{\langle t\rangle}\right)
+    \end{aligned}
+  \]
+</div>
+
 <h3 id="backward-propagation">2.1 Backward Propagation</h3>
+
+<p>This section will be a lot of math, with a lot overlapping from our previous derivation in the RNN post. Please feel free to skip past it!</p>
+
+<p><strong><u>Backpropagation from Output Layer to LSTM hidden state</u></strong></p>
+
+<p>Let our loss function be cross-entropy loss, where $L^{\langle t\rangle} = -y^{\langle t\rangle}\log(\hat{y}^{\langle t\rangle})$.</p>
+
+<p>Then, gradient of loss $L^{\langle t\rangle}$ with respect to predicted value $\hat{y}^{\langle t\rangle}$ is:</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to predicted value">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial \hat{y}^{\langle t\rangle}}
+      = -\frac{y^{\langle t\rangle}}{\hat{y}^{\langle t\rangle}}
+  \]
+</div>
+
+<p>Then, gradient of loss $L^{\langle t\rangle}$ with respect to $z_y^{\langle t\rangle}$:</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to output weighted input">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial z_y^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial \hat{y}^{\langle t\rangle}}
+        \cdot \frac{\partial \hat{y}^{\langle t\rangle}}{\partial z_y^{\langle t\rangle}}
+      = -\frac{y^{\langle t\rangle}}{\hat{y}^{\langle t\rangle}}
+        \cdot \frac{\partial\operatorname{softmax}}{\partial z_y^{\langle t\rangle}}
+      = \hat{y}^{\langle t\rangle} - y^{\langle t\rangle}
+  \]
+</div>
+
+<p>Let’s find derivative of loss function with respect to weight $W_{yh}$:</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to output weight">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{yh}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_y^{\langle t\rangle}}
+        \cdot \frac{\partial z_y^{\langle t\rangle}}{\partial W_{yh}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_y^{\langle t\rangle}}
+        \cdot \frac{\partial(W_{yh}h^{\langle t\rangle} + b_y)}{\partial W_{yh}}
+      = (\hat{y}^{\langle t\rangle} - y^{\langle t\rangle}) \cdot h^{\langle t\rangle}
+  \]
+</div>
+
+<p>Also, the derivative of loss function with respect to bias $b_y$:</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to output bias">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial b_y}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_y^{\langle t\rangle}}
+        \cdot \frac{\partial z_y^{\langle t\rangle}}{\partial b_y}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_y^{\langle t\rangle}}
+        \cdot \frac{\partial(W_{yh}h^{\langle t\rangle} + b_y)}{\partial b_y}
+      = (\hat{y}^{\langle t\rangle} - y^{\langle t\rangle})
+  \]
+</div>
+
+<p>Next, crucially, we want to find derivative of loss function with respect to $h^{\langle t\rangle}$:</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to LSTM hidden state">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_y^{\langle t\rangle}}
+        \cdot \frac{\partial z_y^{\langle t\rangle}}{\partial h^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_y^{\langle t\rangle}}
+        \cdot \frac{\partial(W_{yh}h^{\langle t\rangle} + b_y)}{\partial h^{\langle t\rangle}}
+      = (\hat{y}^{\langle t\rangle} - y^{\langle t\rangle}) \cdot W_{yh}
+  \]
+</div>
+
+<p><strong><u>Backpropagation through LSTM cell</u></strong></p>
+
+<h4>Output Gate:</h4>
+
+<p>Given $h^{\langle t\rangle} = o_t \odot \tanh(C^{\langle t\rangle})$, we can find derivative of loss function with respect to $o_t$:</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to Output Gate">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial o_t}
+      = \frac{\partial L^{\langle t\rangle}}{\partial h^{\langle t\rangle}}
+        \cdot \frac{\partial h^{\langle t\rangle}}{\partial o_t}
+      = \frac{\partial L^{\langle t\rangle}}{\partial h^{\langle t\rangle}}
+        \odot \tanh(C^{\langle t\rangle})
+  \]
+</div>
+
+<p>If we use $o_t = \sigma(z_o)$,</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to Output Gate weighted input">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial z_o}
+      = \frac{\partial L^{\langle t\rangle}}{\partial o_t}
+        \odot o_t \odot (1-o_t)
+  \]
+</div>
+
+<p>and we also have:</p>
+
+<div class="equation-block" role="math" aria-label="Output Gate input-weight gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{ox}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_o}x^{\langle t\rangle}
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="Output Gate recurrent-weight gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{oh}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_o}h^{\langle t-1\rangle}
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="Output Gate bias gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial b_o}
+      = \sum \frac{\partial L^{\langle t\rangle}}{\partial z_o}
+  \]
+</div>
+
+<p>Next, to find derivative of loss function with respect to $C^{\langle t\rangle}$:</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to cell state">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial C^{\langle t\rangle}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial h^{\langle t\rangle}}
+        \cdot \odot(1-\tanh(C^{\langle t\rangle}))
+      + \frac{\partial L^{\langle t+1\rangle}}{\partial C^{\langle t+1\rangle}}
+        \odot f_{t+1}
+  \]
+</div>
+
+<p>Given $C^{\langle t\rangle} = (C^{\langle t-1\rangle} \odot f_t) \oplus (i_t \odot g_t)$, we can find derivative of loss function with respect to each component!</p>
+
+<h4>Forget Gate:</h4>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to Forget Gate">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial f_t}
+      = \frac{\partial L^{\langle t\rangle}}{\partial C^{\langle t\rangle}}
+        \odot C^{\langle t-1\rangle}
+  \]
+</div>
+
+<p>If we use $f_t = \sigma(z_f)$,</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to Forget Gate weighted input">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial z_f}
+      = \frac{\partial L^{\langle t\rangle}}{\partial f_t}
+        \odot f_t \odot (1-f_t)
+  \]
+</div>
+
+<p>and we also have:</p>
+
+<div class="equation-block" role="math" aria-label="Forget Gate input-weight gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{fx}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_f}x^{\langle t\rangle}
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="Forget Gate recurrent-weight gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{fh}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_f}h^{\langle t-1\rangle}
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="Forget Gate bias gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial b_f}
+      = \sum \frac{\partial L^{\langle t\rangle}}{\partial z_f}
+  \]
+</div>
+
+<h4>Input Gate:</h4>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to Input Gate">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial i_t}
+      = \frac{\partial L^{\langle t\rangle}}{\partial C^{\langle t\rangle}}
+        \odot g_t
+  \]
+</div>
+
+<p>If we use $i_t = \sigma(z_i)$,</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to Input Gate weighted input">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial z_i}
+      = \frac{\partial L^{\langle t\rangle}}{\partial i_t}
+        \odot f_t \odot (1-f_t)
+  \]
+</div>
+
+<p>and we also have:</p>
+
+<div class="equation-block" role="math" aria-label="Input Gate input-weight gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{ix}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_i}x^{\langle t\rangle}
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="Input Gate recurrent-weight gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{ih}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_i}h^{\langle t-1\rangle}
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="Input Gate bias gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial b_i}
+      = \sum \frac{\partial L^{\langle t\rangle}}{\partial z_i}
+  \]
+</div>
+
+<h4>Input Node:</h4>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to Input Node">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial g_t}
+      = \frac{\partial L^{\langle t\rangle}}{\partial C^{\langle t\rangle}}
+        \odot i_t
+  \]
+</div>
+
+<p>If we use $g_t = \tanh(z_g)$,</p>
+
+<div class="equation-block" role="math" aria-label="Derivative of loss with respect to Input Node weighted input">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial z_g}
+      = \frac{\partial L^{\langle t\rangle}}{\partial g_t}
+        \odot (1-C^{\langle t\rangle})^2
+  \]
+</div>
+
+<p>and we also have:</p>
+
+<div class="equation-block" role="math" aria-label="Input Node input-weight gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{gx}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_g}x^{\langle t\rangle}
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="Input Node recurrent-weight gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial W_{gh}}
+      = \frac{\partial L^{\langle t\rangle}}{\partial z_g}h^{\langle t-1\rangle}
+  \]
+</div>
+
+<div class="equation-block" role="math" aria-label="Input Node bias gradient">
+  \[
+    \frac{\partial L^{\langle t\rangle}}{\partial b_g}
+      = \sum \frac{\partial L^{\langle t\rangle}}{\partial z_g}
+  \]
+</div>
+
+<p>Finally, we’ll finish off the backpropagation section by summarizing how we update all the parameters based on the gradients of the current time step $t$:</p>
+
+<p><strong>Updating Output(y) Layer Parameters</strong></p>
+
+<div class="equation-block" role="math" aria-label="Output layer parameter updates">
+  \[
+    \begin{aligned}
+      W_{yh} &= W_{yh} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{yh}} \\
+      b_y &= b_y - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial b_y}
+    \end{aligned}
+  \]
+</div>
+
+<p><strong>Updating Forget Gate Parameters</strong></p>
+
+<div class="equation-block" role="math" aria-label="Forget Gate parameter updates">
+  \[
+    \begin{aligned}
+      W_{fx} &= W_{fx} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{fx}} \\
+      W_{fh} &= W_{fh} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{fh}} \\
+      b_f &= b_f - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial b_f}
+    \end{aligned}
+  \]
+</div>
+
+<p><strong>Updating Input Gate Parameters</strong></p>
+
+<div class="equation-block" role="math" aria-label="Input Gate parameter updates">
+  \[
+    \begin{aligned}
+      W_{ix} &= W_{ix} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{ix}} \\
+      W_{ih} &= W_{ih} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{ih}} \\
+      b_i &= b_i - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial b_i}
+    \end{aligned}
+  \]
+</div>
+
+<p><strong>Updating Input Node Parameters</strong></p>
+
+<div class="equation-block" role="math" aria-label="Input Node parameter updates">
+  \[
+    \begin{aligned}
+      W_{gx} &= W_{gx} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{gx}} \\
+      W_{gh} &= W_{gh} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{gh}} \\
+      b_g &= b_g - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial b_g}
+    \end{aligned}
+  \]
+</div>
+
+<p><strong>Updating Output Gate Parameters</strong></p>
+
+<div class="equation-block" role="math" aria-label="Output Gate parameter updates">
+  \[
+    \begin{aligned}
+      W_{ox} &= W_{ox} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{gx}} \\
+      W_{oh} &= W_{oh} - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial W_{oh}} \\
+      b_o &= b_o - \alpha \cdot \frac{\partial L^{\langle t\rangle}}{\partial b_o}
+    \end{aligned}
+  \]
+</div>
+
+<p>Phew. That was a lot! The working was done in my head, reading off latex code, so there may be some small mistakes or typos in there :P</p>
 
 <h3 id="gradients">2.2 How LSTMs Solve Vanishing and Exploding Gradients</h3>
 
