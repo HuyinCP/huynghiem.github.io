@@ -45,7 +45,3 @@ The root `.nojekyll` file tells GitHub Pages to publish the generated HTML direc
 3. Select **Deploy from a branch**, branch **main**, folder **/(root)**, then click **Save**.
 
 If you rename the repository to `HuyinCP.github.io`, the site address becomes `https://huyincp.github.io/`. The relative links in this site work with either address.
-
-
-This is a static HTML, CSS, and JavaScript website inspired by
-[codingowen.github.io](https://codingowen.github.io/).
