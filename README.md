@@ -16,7 +16,6 @@ install the **Live Server** extension in VS Code.
 - Project index: `projects.html` (summaries and links only)
 - Project images: store them in a project folder such as `assets/images/rnn/` and update the thumbnail path in `projects.html`.
 - Blog list: `blogs.html`
-- Achievements page: `achievements.html` (replace the empty state with verified milestones, dates, and optional images or links)
 - Knowledge Graph: `knowledge_graph.html`
 - Editable project articles: one Markdown file per project inside `src/projects/`
 - Shared project layout and MathJax configuration: `src/project-layout.html`
