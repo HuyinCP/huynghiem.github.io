@@ -1093,8 +1093,8 @@ a:focus-visible {
 
 .home-avatar {
   display: block;
-  width: 78px;
-  height: 78px;
+  width: 148px;
+  height: 148px;
   margin-bottom: 22px;
   object-fit: cover;
   object-position: center 35%;
@@ -1212,8 +1212,8 @@ a:focus-visible {
 
 @media (max-width: 560px) {
   .home-avatar {
-    width: 64px;
-    height: 64px;
+    width: 104px;
+    height: 104px;
     margin-bottom: 18px;
     border-radius: 15px;
   }
