@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Source+Code+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap");
 
 :root {
   color-scheme: light;
@@ -626,18 +626,51 @@ a:focus-visible {
 
 .article pre {
   overflow-x: auto;
-  margin: 28px 0;
-  padding: 18px;
+  margin: 26px 0;
+  padding: 20px 22px;
+  color: #2b303b;
+  background: #f8f8fa;
+  border: 1px solid #e6e3ec;
+  border-radius: 8px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  tab-size: 4;
+  -webkit-font-smoothing: antialiased;
+}
+
+.article pre:has(code.language-text) {
+  color: #4f5666;
   background: #fcfbfe;
-  border: 1px solid #ebe8f0;
-  border-radius: 4px;
-  font-size: 13px;
-  line-height: 1.55;
+  border-color: #ebe8f0;
 }
 
 .article code {
-  font-family: Consolas, "Liberation Mono", monospace;
+  font-family: "Source Code Pro", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
 }
+
+.article :not(pre) > code {
+  padding: 2px 6px;
+  color: #343d46;
+  background: #f4f3f7;
+  border: 1px solid #eae7f0;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Sublime Text Light (Breakers-inspired) syntax highlighting */
+.tok-comment   { color: #8c95a6; font-style: italic; }
+.tok-docstring { color: #718c67; font-style: italic; }
+.tok-keyword   { color: #9c4ea3; font-weight: 500; }
+.tok-class     { color: #2468ad; font-weight: 600; }
+.tok-function  { color: #2669b0; font-weight: 600; }
+.tok-call      { color: #2c70b5; }
+.tok-self      { color: #c7414c; font-style: italic; }
+.tok-builtin   { color: #1f7f8a; }
+.tok-string    { color: #4d8a40; }
+.tok-number    { color: #c75f24; }
+.tok-constant  { color: #c75f24; font-weight: 500; }
+.tok-operator  { color: #297c8c; }
+.tok-decorator { color: #b56c1f; }
 
 .equation-block {
   overflow-x: auto;
@@ -1043,19 +1076,20 @@ a:focus-visible {
   margin-bottom: 18px;
 }
 
-.graph-layout .graph-panel {
+.graph-layout .graph-stage {
   position: sticky;
   top: 24px;
   width: 100%;
   min-width: 0;
-  margin: 0;
 }
 
 .graph-layout #knowledge-graph {
+  width: 100%;
   min-width: 0;
   height: auto;
   min-height: 0;
-  aspect-ratio: 1000 / 620;
+  aspect-ratio: 880 / 640;
+  overflow: visible;
 }
 
 @media (max-width: 850px) {
@@ -1066,7 +1100,7 @@ a:focus-visible {
     margin-bottom: 72px;
   }
 
-  .graph-layout .graph-panel {
+  .graph-layout .graph-stage {
     position: static;
     order: -1;
   }
@@ -1074,7 +1108,8 @@ a:focus-visible {
 
 @media (max-width: 700px) {
   .graph-layout #knowledge-graph {
-    min-width: 640px;
+    height: 360px;
+    aspect-ratio: auto;
   }
 }
 
@@ -1098,70 +1133,58 @@ a:focus-visible {
 }
 
 .home-personal {
-  max-width: 520px;
+  max-width: 460px;
 }
 
 .home-avatar {
   display: block;
-  width: 148px;
-  height: 148px;
+  width: 116px;
+  height: 116px;
   margin-bottom: 22px;
   object-fit: cover;
-  object-position: center 35%;
-  border: 2px solid #fff;
-  border-radius: 18px;
-  box-shadow: 0 10px 26px rgba(52, 42, 70, 0.1), 0 0 0 1px #ebe8f0;
+  object-position: center 28%;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 8px 24px rgba(52, 42, 70, 0.08), 0 0 0 1px #ebe8f0;
 }
 
-.home-personal .graph-eyebrow {
-  margin-bottom: 10px;
-}
-
-.home-title {
-  margin: 0 0 14px;
+.home-name {
+  margin: 0 0 8px;
   color: var(--ink);
-  font-size: clamp(22px, 2.5vw, 30px);
+  font-size: clamp(24px, 2.7vw, 32px);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.25;
+  line-height: 1.2;
 }
 
-.home-subtitle {
+.home-role {
+  margin: 0 0 14px;
+  color: var(--accent);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.home-welcome {
   margin: 0;
   color: var(--muted);
-  font-size: clamp(15px, 1.1vw, 16.5px);
+  font-size: 15px;
   line-height: 1.65;
 }
 
-.home-graph-panel {
-  display: flex;
-  flex-direction: column;
+.home-graph {
   width: 100%;
-  max-width: 510px;
+  max-width: 540px;
   aspect-ratio: 1 / 1;
   justify-self: end;
-  margin: 0;
 }
 
-.home-graph-panel .graph-panel-header {
-  padding: 15px 20px;
-}
-
-.home-graph-panel .graph-viewport {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.home-graph-panel #knowledge-graph {
+.home-graph #knowledge-graph {
   width: 100%;
   min-width: 0;
   height: 100%;
   min-height: 0;
-}
-
-.home-graph-panel .graph-hint {
-  padding: 11px 16px 13px;
+  overflow: visible;
 }
 
 .home-link-bar {
@@ -1214,7 +1237,7 @@ a:focus-visible {
     gap: 32px;
   }
 
-  .home-graph-panel {
+  .home-graph {
     justify-self: center;
     max-width: 480px;
   }
@@ -1222,18 +1245,17 @@ a:focus-visible {
 
 @media (max-width: 560px) {
   .home-avatar {
-    width: 104px;
-    height: 104px;
+    width: 96px;
+    height: 96px;
     margin-bottom: 18px;
-    border-radius: 15px;
   }
 
-  .home-graph-panel {
+  .home-graph {
     aspect-ratio: auto;
   }
 
-  .home-graph-panel #knowledge-graph {
-    height: 330px;
+  .home-graph #knowledge-graph {
+    height: 340px;
   }
 
   .home-link-bar {

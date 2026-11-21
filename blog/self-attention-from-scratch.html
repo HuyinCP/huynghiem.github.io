@@ -84,7 +84,7 @@
         <figcaption>Figure 2. Original token embeddings transformed into context-aware embeddings via Self-Attention.</figcaption>
       </figure>
 
-      <p>Downstream, this attention output (the contextualized token embeddings) can be passed into a neural network for further refinement, and each final token embedding can be mapped into a probability distribution over the entire vocabulary—enabling next-word prediction and text generation like GPT.</p>
+      <p>Downstream, this attention output (the contextualized token embeddings) can be passed into a neural network for further refinement, and each final token embedding can be mapped into a probability distribution over the entire vocabulary. This enables next-word prediction and text generation like GPT.</p>
 
       <p>Now we’re ready to implement the Self-Attention mechanism in code.</p>
 
@@ -112,24 +112,24 @@
 
       <p><strong>Input:</strong></p>
 
-      <pre><code class="language-python">sentence = &quot;Life is short, eat dessert first&quot;
-dc = {s: i for i, s in enumerate(sorted(sentence.replace(&quot;,&quot;, &quot;&quot;).split()))}
-print(dc)
+      <pre><code class="language-python">sentence <span class="tok-operator">=</span> <span class="tok-string">&quot;Life is short, eat dessert first&quot;</span>
+dc <span class="tok-operator">=</span> {s: i <span class="tok-keyword">for</span> i, s <span class="tok-keyword">in</span> <span class="tok-builtin">enumerate</span>(<span class="tok-builtin">sorted</span>(sentence.<span class="tok-call">replace</span>(<span class="tok-string">&quot;,&quot;</span>, <span class="tok-string">&quot;&quot;</span>).<span class="tok-call">split</span>()))}
+<span class="tok-builtin">print</span>(dc)
 </code></pre>
       <p><strong>Output:</strong></p>
 
-      <pre><code class="language-text">{&#39;Life&#39;: 0, &#39;dessert&#39;: 1, &#39;eat&#39;: 2, &#39;first&#39;: 3, &#39;is&#39;: 4, &#39;short&#39;: 5}
+      <pre><code class="language-text">{&#039;Life&#039;: 0, &#039;dessert&#039;: 1, &#039;eat&#039;: 2, &#039;first&#039;: 3, &#039;is&#039;: 4, &#039;short&#039;: 5}
 </code></pre>
       <h4>Step 2: Map the original sentence words to indices in a PyTorch tensor</h4>
 
       <p><strong>Input:</strong></p>
 
-      <pre><code class="language-python">import torch
+      <pre><code class="language-python"><span class="tok-keyword">import</span> torch
 
-sentence_int = torch.tensor(
-    [dc[s] for s in sentence.replace(&quot;,&quot;, &quot;&quot;).split()]
+sentence_int <span class="tok-operator">=</span> torch.<span class="tok-call">tensor</span>(
+    [dc[s] <span class="tok-keyword">for</span> s <span class="tok-keyword">in</span> sentence.<span class="tok-call">replace</span>(<span class="tok-string">&quot;,&quot;</span>, <span class="tok-string">&quot;&quot;</span>).<span class="tok-call">split</span>()]
 )
-print(sentence_int)
+<span class="tok-builtin">print</span>(sentence_int)
 </code></pre>
       <p><strong>Output:</strong></p>
 
@@ -139,11 +139,11 @@ print(sentence_int)
 
       <p><strong>Input:</strong></p>
 
-      <pre><code class="language-python">torch.manual_seed(42)
-embed = torch.nn.Embedding(6, 16)
-embedded_sentence = embed(sentence_int).detach()
-print(embedded_sentence)
-print(embedded_sentence.shape)
+      <pre><code class="language-python">torch.<span class="tok-call">manual_seed</span>(<span class="tok-number">42</span>)
+embed <span class="tok-operator">=</span> torch.nn.<span class="tok-class">Embedding</span>(<span class="tok-number">6</span>, <span class="tok-number">16</span>)
+embedded_sentence <span class="tok-operator">=</span> <span class="tok-call">embed</span>(sentence_int).<span class="tok-call">detach</span>()
+<span class="tok-builtin">print</span>(embedded_sentence)
+<span class="tok-builtin">print</span>(embedded_sentence.shape)
 </code></pre>
       <p><strong>Output:</strong></p>
 
@@ -181,13 +181,13 @@ torch.Size([6, 16])
 
       <p><strong>Input:</strong></p>
 
-      <pre><code class="language-python">torch.manual_seed(42)
-d = embedded_sentence.shape[1]
-d_k, d_q, d_v = 24, 24, 28
+      <pre><code class="language-python">torch.<span class="tok-call">manual_seed</span>(<span class="tok-number">42</span>)
+d <span class="tok-operator">=</span> embedded_sentence.shape[<span class="tok-number">1</span>]
+d_k, d_q, d_v <span class="tok-operator">=</span> <span class="tok-number">24</span>, <span class="tok-number">24</span>, <span class="tok-number">28</span>
 
-W_K = torch.nn.Parameter(torch.rand(d, d_k))
-W_Q = torch.nn.Parameter(torch.rand(d, d_q))
-W_V = torch.nn.Parameter(torch.rand(d, d_v))
+W_K <span class="tok-operator">=</span> torch.nn.<span class="tok-class">Parameter</span>(torch.<span class="tok-call">rand</span>(d, d_k))
+W_Q <span class="tok-operator">=</span> torch.nn.<span class="tok-class">Parameter</span>(torch.<span class="tok-call">rand</span>(d, d_q))
+W_V <span class="tok-operator">=</span> torch.nn.<span class="tok-class">Parameter</span>(torch.<span class="tok-call">rand</span>(d, d_v))
 </code></pre>
       <h3 id="attention-weights">Computing the Attention Weights from $K$ and $Q$</h3>
 
@@ -205,13 +205,13 @@ W_V = torch.nn.Parameter(torch.rand(d, d_v))
 
       <p><strong>Input:</strong></p>
 
-      <pre><code class="language-python">K = embedded_sentence @ W_K
-Q = embedded_sentence @ W_Q
-V = embedded_sentence @ W_V
+      <pre><code class="language-python">K <span class="tok-operator">=</span> embedded_sentence <span class="tok-operator">@</span> W_K
+Q <span class="tok-operator">=</span> embedded_sentence <span class="tok-operator">@</span> W_Q
+V <span class="tok-operator">=</span> embedded_sentence <span class="tok-operator">@</span> W_V
 
-print(K.shape)
-print(Q.shape)
-print(V.shape)
+<span class="tok-builtin">print</span>(K.shape)
+<span class="tok-builtin">print</span>(Q.shape)
+<span class="tok-builtin">print</span>(V.shape)
 </code></pre>
       <p><strong>Output:</strong></p>
 
@@ -223,13 +223,13 @@ torch.Size([6, 28])
 
       <p><strong>Input:</strong></p>
 
-      <pre><code class="language-python">import math
-import torch.nn.functional as F
+      <pre><code class="language-python"><span class="tok-keyword">import</span> math
+<span class="tok-keyword">import</span> torch.nn.functional <span class="tok-keyword">as</span> F
 
-attention_scores = K @ Q.T
-attention_scores = attention_scores / math.sqrt(d_k)
-attention_weights = F.softmax(attention_scores, dim=-1)  # dim=-1 applies softmax along each row
-print(attention_weights)
+attention_scores <span class="tok-operator">=</span> K <span class="tok-operator">@</span> Q.T
+attention_scores <span class="tok-operator">=</span> attention_scores <span class="tok-operator">/</span> math.<span class="tok-call">sqrt</span>(d_k)
+attention_weights <span class="tok-operator">=</span> F.<span class="tok-call">softmax</span>(attention_scores, dim<span class="tok-operator">=</span><span class="tok-operator">-</span><span class="tok-number">1</span>)  <span class="tok-comment"># dim=-1 applies softmax along each row</span>
+<span class="tok-builtin">print</span>(attention_weights)
 </code></pre>
       <p><strong>Output:</strong></p>
 
@@ -247,8 +247,8 @@ print(attention_weights)
 
       <p><strong>Input:</strong></p>
 
-      <pre><code class="language-python">context_vectors = attention_weights @ V
-print(context_vectors)
+      <pre><code class="language-python">context_vectors <span class="tok-operator">=</span> attention_weights <span class="tok-operator">@</span> V
+<span class="tok-builtin">print</span>(context_vectors)
 </code></pre>
       <p><strong>Output:</strong></p>
 
@@ -281,31 +281,31 @@ print(context_vectors)
 
       <p>Let’s bring all the steps together into a clean PyTorch module so that calling the forward pass directly returns the context vectors:</p>
 
-      <pre><code class="language-python">import math
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+      <pre><code class="language-python"><span class="tok-keyword">import</span> math
+<span class="tok-keyword">import</span> torch
+<span class="tok-keyword">import</span> torch.nn <span class="tok-keyword">as</span> nn
+<span class="tok-keyword">import</span> torch.nn.functional <span class="tok-keyword">as</span> F
 
 
-class SelfAttention(nn.Module):
-    def __init__(self, d, d_k, d_q, d_v):
-        super().__init__()
-        self.d = d
-        self.d_k = d_k
-        self.d_q = d_q
-        self.d_v = d_v
-        self.W_K = nn.Parameter(torch.rand(d, d_k))
-        self.W_Q = nn.Parameter(torch.rand(d, d_q))
-        self.W_V = nn.Parameter(torch.rand(d, d_v))
+<span class="tok-keyword">class</span> <span class="tok-class">SelfAttention</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, d, d_k, d_q, d_v):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.d <span class="tok-operator">=</span> d
+        <span class="tok-self">self</span>.d_k <span class="tok-operator">=</span> d_k
+        <span class="tok-self">self</span>.d_q <span class="tok-operator">=</span> d_q
+        <span class="tok-self">self</span>.d_v <span class="tok-operator">=</span> d_v
+        <span class="tok-self">self</span>.W_K <span class="tok-operator">=</span> nn.<span class="tok-class">Parameter</span>(torch.<span class="tok-call">rand</span>(d, d_k))
+        <span class="tok-self">self</span>.W_Q <span class="tok-operator">=</span> nn.<span class="tok-class">Parameter</span>(torch.<span class="tok-call">rand</span>(d, d_q))
+        <span class="tok-self">self</span>.W_V <span class="tok-operator">=</span> nn.<span class="tok-class">Parameter</span>(torch.<span class="tok-call">rand</span>(d, d_v))
 
-    def forward(self, X):
-        K = X @ self.W_K
-        Q = X @ self.W_Q
-        V = X @ self.W_V
-        attention_scores = Q @ K.T / math.sqrt(self.d_k)
-        attention_weights = F.softmax(attention_scores, dim=-1)
-        context_vector = attention_weights @ V
-        return context_vector
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, X):
+        K <span class="tok-operator">=</span> X <span class="tok-operator">@</span> <span class="tok-self">self</span>.W_K
+        Q <span class="tok-operator">=</span> X <span class="tok-operator">@</span> <span class="tok-self">self</span>.W_Q
+        V <span class="tok-operator">=</span> X <span class="tok-operator">@</span> <span class="tok-self">self</span>.W_V
+        attention_scores <span class="tok-operator">=</span> Q <span class="tok-operator">@</span> K.T <span class="tok-operator">/</span> math.<span class="tok-call">sqrt</span>(<span class="tok-self">self</span>.d_k)
+        attention_weights <span class="tok-operator">=</span> F.<span class="tok-call">softmax</span>(attention_scores, dim<span class="tok-operator">=</span><span class="tok-operator">-</span><span class="tok-number">1</span>)
+        context_vector <span class="tok-operator">=</span> attention_weights <span class="tok-operator">@</span> V
+        <span class="tok-keyword">return</span> context_vector
 </code></pre>
       <p>That completes the Scaled Dot-Product Self-Attention Mechanism implemented in code.</p>
 

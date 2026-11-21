@@ -206,7 +206,7 @@ class PatchEmbeddings(nn.Module):
 
 <h4 id="cls-token">3. Prepend a Trainable Class Embedding to the Set of Patch Embeddings</h4>
 
-<p>One feature popularized in Transformer models like BERT is the use of a <code>[CLS]</code> (“classification”) token—a special token prepended to every input sequence.</p>
+<p>One feature popularized in Transformer models like BERT is the use of a <code>[CLS]</code> (“classification”) token, a special token prepended to every input sequence.</p>
 
 <p>In BERT, the <code>[CLS]</code> token does not represent any word from the input; instead, it serves as a global representation of the entire sequence. After passing through multiple self-attention layers, its final embedding is used for classification.</p>
 
@@ -245,7 +245,7 @@ class PatchEmbeddings(nn.Module):
 
 <p>One big question I had when learning about this topic was: <em>why do we need to use learnable position embeddings specifically?</em></p>
 
-<p>Earlier, we discussed why the model needs a spatial understanding of image patches. In the simplest case, if positional encodings were not learnable—for example, if they were hardcoded using the raw $(x, y)$ coordinates of each image patch—the model might struggle to generalize across different spatial arrangements. With rigid hardcoded positions, the network might not interpret “cat at top of image” and “cat at bottom of image” similarly, introducing rigid spatial biases about image patches.</p>
+<p>Earlier, we discussed why the model needs a spatial understanding of image patches. In the simplest case, if positional encodings were not learnable, for example if they were hardcoded using the raw $(x, y)$ coordinates of each image patch, the model might struggle to generalize across different spatial arrangements. With rigid hardcoded positions, the network might not interpret “cat at top of image” and “cat at bottom of image” similarly, introducing rigid spatial biases about image patches.</p>
 
 <p>Instead, learnable position embeddings allow the model to flexibly adapt its spatial representation based on the data, helping it approximate a form of translational invariance.</p>
 
@@ -500,7 +500,7 @@ class Encoder(nn.Module):
   <figcaption>Figure 10. Feeding the final <code>[CLS]</code> token representation into the classification head to predict class logits.</figcaption>
 </figure>
 
-<p>To turn these embeddings into useful predictions, we pass the <code>[CLS]</code> token embedding into a classification layer—a fully connected layer that takes the <code>[CLS]</code> embedding of size <code>hidden_size</code> and outputs logits for each image class.</p>
+<p>To turn these embeddings into useful predictions, we pass the <code>[CLS]</code> token embedding into a classification layer, a fully connected layer that takes the <code>[CLS]</code> embedding of size <code>hidden_size</code> and outputs logits for each image class.</p>
 
 <p>Here’s the code implementation for the full ViT classifier model:</p>
 

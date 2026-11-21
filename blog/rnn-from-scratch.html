@@ -574,13 +574,13 @@
 
       <p class="draft-note">Describe the dataset, hyperparameters, and how you validate the model before adding your implementation.</p>
 
-      <pre><code class="language-python">import numpy as np
+      <pre><code class="language-python"><span class="tok-keyword">import</span> numpy <span class="tok-keyword">as</span> np
 
-# Example structure for one forward step
-def rnn_step(x_t, h_prev, W_hx, W_hh, b_h):
-    z_h = W_hx @ x_t + W_hh @ h_prev + b_h
-    h_t = np.tanh(z_h)
-    return h_t
+<span class="tok-comment"># Example structure for one forward step</span>
+<span class="tok-keyword">def</span> <span class="tok-function">rnn_step</span>(x_t, h_prev, <span class="tok-class">W_hx</span>, <span class="tok-class">W_hh</span>, b_h):
+    z_h <span class="tok-operator">=</span> <span class="tok-class">W_hx</span> <span class="tok-operator">@</span> x_t <span class="tok-operator">+</span> <span class="tok-class">W_hh</span> <span class="tok-operator">@</span> h_prev <span class="tok-operator">+</span> b_h
+    h_t <span class="tok-operator">=</span> np.<span class="tok-call">tanh</span>(z_h)
+    <span class="tok-keyword">return</span> h_t
 </code></pre>
       <h3>3.1. Training Results</h3>
       <p class="draft-note">Add the loss curve, generated text, and your own observations here.</p>

@@ -53,7 +53,7 @@ back_label: Projects
   <figcaption>Figure 2. Original token embeddings transformed into context-aware embeddings via Self-Attention.</figcaption>
 </figure>
 
-<p>Downstream, this attention output (the contextualized token embeddings) can be passed into a neural network for further refinement, and each final token embedding can be mapped into a probability distribution over the entire vocabulary—enabling next-word prediction and text generation like GPT.</p>
+<p>Downstream, this attention output (the contextualized token embeddings) can be passed into a neural network for further refinement, and each final token embedding can be mapped into a probability distribution over the entire vocabulary. This enables next-word prediction and text generation like GPT.</p>
 
 <p>Now we’re ready to implement the Self-Attention mechanism in code.</p>
 

@@ -48,19 +48,8 @@
         </div>
       </section>
 
-      <section class="graph-panel" aria-labelledby="graph-title">
-        <div class="graph-panel-header">
-          <h2 id="graph-title">Knowledge map</h2>
-          <div class="graph-legend" aria-label="Map legend">
-            <span><i class="graph-key graph-key-topic"></i>Topic</span>
-            <span><i class="graph-key graph-key-project"></i>Project</span>
-          </div>
-        </div>
-        <p class="graph-swipe-hint">Swipe sideways to explore the full map.</p>
-        <div class="graph-viewport" role="region" aria-label="Scrollable knowledge map" tabindex="0">
-          <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics connected to five projects" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet"></svg>
-        </div>
-        <p class="graph-hint">Hover to trace connections. Drag nodes to rearrange the map.</p>
+      <section class="graph-stage" aria-label="Knowledge Graph">
+        <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics connected to five projects" viewBox="60 10 880 640" preserveAspectRatio="xMidYMid meet"></svg>
       </section>
     </div>
   </main>
@@ -68,16 +57,16 @@
   <script id="graph-data" type="application/json">
     {
       "nodes": [
-        {"id":"neural-networks","type":"topic","label":"Neural Networks","x":500,"y":110},
-        {"id":"computer-vision","type":"topic","label":"Computer Vision","x":230,"y":245},
-        {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":245},
-        {"id":"attention","type":"topic","label":"Attention","x":770,"y":245},
-        {"id":"memory","type":"topic","label":"Long-Term Memory","x":500,"y":360},
-        {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":170,"y":500,"url":"blog/shallow-nn-from-scratch.html"},
-        {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":390,"y":500,"url":"blog/rnn-from-scratch.html"},
-        {"id":"lstm","type":"project","label":"LSTM from Scratch","x":610,"y":500,"url":"blog/lstm-from-scratch.html"},
-        {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":830,"y":500,"url":"blog/self-attention-from-scratch.html"},
-        {"id":"vit","type":"project","label":"Vision Transformer","x":770,"y":590,"url":"blog/vision-transformer-from-scratch.html"}
+        {"id":"neural-networks","type":"topic","label":"Neural Networks","x":500,"y":120},
+        {"id":"computer-vision","type":"topic","label":"Computer Vision","x":280,"y":240},
+        {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":260},
+        {"id":"attention","type":"topic","label":"Attention","x":720,"y":240},
+        {"id":"memory","type":"topic","label":"Long-Term Memory","x":420,"y":370},
+        {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":230,"y":420,"url":"blog/shallow-nn-from-scratch.html"},
+        {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":370,"y":495,"url":"blog/rnn-from-scratch.html"},
+        {"id":"lstm","type":"project","label":"LSTM from Scratch","x":530,"y":505,"url":"blog/lstm-from-scratch.html"},
+        {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":750,"y":400,"url":"blog/self-attention-from-scratch.html"},
+        {"id":"vit","type":"project","label":"Vision Transformer","x":680,"y":510,"url":"blog/vision-transformer-from-scratch.html"}
       ],
       "links": [
         {"source":"neural-networks","target":"computer-vision"},

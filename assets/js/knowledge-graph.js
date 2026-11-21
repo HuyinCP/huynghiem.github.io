@@ -12,11 +12,28 @@
   }
 
   const namespace = "http://www.w3.org/2000/svg";
+  const viewBox = svg.viewBox.baseVal;
+  const centerX = viewBox && viewBox.width ? viewBox.x + viewBox.width / 2 : 500;
+  const centerY = viewBox && viewBox.height ? viewBox.y + viewBox.height / 2 : 310;
+  const minBoundX = viewBox && viewBox.width ? viewBox.x + 25 : 45;
+  const maxBoundX = viewBox && viewBox.width ? viewBox.x + viewBox.width - 25 : 955;
+  const minBoundY = viewBox && viewBox.height ? viewBox.y + 25 : 45;
+  const maxBoundY = viewBox && viewBox.height ? viewBox.y + viewBox.height - 45 : 585;
+
+  const avgX = data.nodes.reduce((sum, node) => sum + node.x, 0) / Math.max(data.nodes.length, 1);
+  const avgY = data.nodes.reduce((sum, node) => sum + node.y, 0) / Math.max(data.nodes.length, 1);
+  for (const node of data.nodes) {
+    node.x = node.x - avgX + centerX;
+    node.y = node.y - avgY + centerY;
+    node.vx = 0;
+    node.vy = 0;
+  }
+
   const nodesById = new Map(data.nodes.map((node) => [node.id, node]));
   const nodeElements = new Map();
   const linkElements = [];
   let dragState = null;
-  let simulationFrame;
+  let simulationFrame = null;
   let panState = null;
   let panX = 0;
   let panY = 0;
@@ -76,7 +93,7 @@
     const lines = [""];
     for (const word of words) {
       const current = lines[lines.length - 1];
-      if (current && `${current} ${word}`.length > 22) lines.push(word);
+      if (current && `${current} ${word}`.length > 18) lines.push(word);
       else lines[lines.length - 1] = current ? `${current} ${word}` : word;
     }
     return lines;
@@ -105,13 +122,12 @@
   };
 
   const startSimulation = () => {
-    data.nodes.forEach((node, index) => {
-      node.vx = ((index % 3) - 1) * 0.25;
-      node.vy = ((index % 2) ? 1 : -1) * 0.2;
-    });
-    let alpha = 0.9;
+    if (simulationFrame) return;
+
+    let idleFrames = 0;
+    const maxSpeed = 2.4;
+
     const tick = () => {
-      if (alpha < 0.015) return;
       const forces = new Map(data.nodes.map((node) => [node.id, { x: 0, y: 0 }]));
 
       for (let i = 0; i < data.nodes.length; i += 1) {
@@ -120,8 +136,8 @@
           const b = data.nodes[j];
           const dx = b.x - a.x;
           const dy = b.y - a.y;
-          const distance = Math.max(Math.hypot(dx, dy), 1);
-          const strength = 900 / (distance * distance);
+          const distance = Math.max(Math.hypot(dx, dy), 24);
+          const strength = 1250 / (distance * distance);
           const fx = (dx / distance) * strength;
           const fy = (dy / distance) * strength;
           forces.get(a.id).x -= fx;
@@ -137,7 +153,7 @@
         const dx = targetNode.x - sourceNode.x;
         const dy = targetNode.y - sourceNode.y;
         const distance = Math.max(Math.hypot(dx, dy), 1);
-        const stretch = (distance - 145) * 0.012;
+        const stretch = (distance - 190) * 0.0038;
         const fx = (dx / distance) * stretch;
         const fy = (dy / distance) * stretch;
         forces.get(sourceNode.id).x += fx;
@@ -146,6 +162,8 @@
         forces.get(targetNode.id).y -= fy;
       }
 
+      let maxMotion = 0;
+
       for (const node of data.nodes) {
         const force = forces.get(node.id);
         if (dragState?.node === node) {
@@ -153,16 +171,127 @@
           node.vy = 0;
           continue;
         }
-        node.vx = (node.vx + force.x + (500 - node.x) * 0.0008) * 0.86;
-        node.vy = (node.vy + force.y + (310 - node.y) * 0.0008) * 0.86;
-        node.x = Math.max(45, Math.min(955, node.x + node.vx * alpha));
-        node.y = Math.max(45, Math.min(585, node.y + node.vy * alpha));
+
+        const centerPullX = (centerX - node.x) * 0.0014;
+        const centerPullY = (centerY - node.y) * 0.0014;
+
+        node.vx = (node.vx + force.x + centerPullX) * 0.78;
+        node.vy = (node.vy + force.y + centerPullY) * 0.78;
+
+        const speed = Math.hypot(node.vx, node.vy);
+        if (speed > maxSpeed) {
+          node.vx = (node.vx / speed) * maxSpeed;
+          node.vy = (node.vy / speed) * maxSpeed;
+        }
+
+        const prevX = node.x;
+        const prevY = node.y;
+        node.x += node.vx;
+        node.y += node.vy;
+        maxMotion = Math.max(maxMotion, Math.hypot(node.x - prevX, node.y - prevY));
       }
-      alpha *= 0.985;
+
+      // Gentle positional bounding-box separation so node labels never overlap
+      for (let pass = 0; pass < 2; pass += 1) {
+        for (let i = 0; i < data.nodes.length; i += 1) {
+          for (let j = i + 1; j < data.nodes.length; j += 1) {
+            const a = data.nodes[i];
+            const b = data.nodes[j];
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const overlapX = a.halfW + b.halfW - Math.abs(dx);
+            const overlapY =
+              Math.min(a.y + a.bottomExtent, b.y + b.bottomExtent) -
+              Math.max(a.y - a.topExtent, b.y - b.topExtent);
+
+            if (overlapX > 0 && overlapY > 0) {
+              const aPinned = dragState?.node === a;
+              const bPinned = dragState?.node === b;
+              const signX = dx === 0 ? (i % 2 === 0 ? 1 : -1) : Math.sign(dx);
+              const signY = dy === 0 ? (j % 2 === 0 ? 1 : -1) : Math.sign(dy);
+
+              if (overlapX < overlapY) {
+                const sep = Math.min(overlapX * 0.22, 2.0) * signX;
+                if (aPinned) {
+                  b.x += sep * 2;
+                } else if (bPinned) {
+                  a.x -= sep * 2;
+                } else {
+                  a.x -= sep;
+                  b.x += sep;
+                }
+                maxMotion = Math.max(maxMotion, Math.abs(sep));
+              } else {
+                const sep = Math.min(overlapY * 0.22, 2.0) * signY;
+                if (aPinned) {
+                  b.y += sep * 2;
+                } else if (bPinned) {
+                  a.y -= sep * 2;
+                } else {
+                  a.y -= sep;
+                  b.y += sep;
+                }
+                maxMotion = Math.max(maxMotion, Math.abs(sep));
+              }
+            }
+          }
+        }
+      }
+
+      // Slowly glide the cluster's center of mass back to the center of the board when released
+      if (!dragState && data.nodes.length > 0) {
+        const meanX = data.nodes.reduce((sum, node) => sum + node.x, 0) / data.nodes.length;
+        const meanY = data.nodes.reduce((sum, node) => sum + node.y, 0) / data.nodes.length;
+        const rawShiftX = (centerX - meanX) * 0.015;
+        const rawShiftY = (centerY - meanY) * 0.015;
+        const shiftMag = Math.hypot(rawShiftX, rawShiftY);
+        const clampedMag = Math.min(shiftMag, 1.4);
+        const shiftX = shiftMag > 0 ? (rawShiftX / shiftMag) * clampedMag : 0;
+        const shiftY = shiftMag > 0 ? (rawShiftY / shiftMag) * clampedMag : 0;
+
+        if (shiftMag > 0.02) {
+          for (const node of data.nodes) {
+            node.x += shiftX;
+            node.y += shiftY;
+          }
+          maxMotion = Math.max(maxMotion, clampedMag);
+        }
+      }
+
+      for (const node of data.nodes) {
+        if (dragState?.node === node) continue;
+        const nodeMinX = minBoundX + node.halfW - 12;
+        const nodeMaxX = maxBoundX - node.halfW + 12;
+        const nodeMinY = minBoundY + node.topExtent - 10;
+        const nodeMaxY = maxBoundY - node.bottomExtent + 12;
+        node.x = Math.max(nodeMinX, Math.min(nodeMaxX, node.x));
+        node.y = Math.max(nodeMinY, Math.min(nodeMaxY, node.y));
+      }
+
+      if (!panState && (Math.abs(panX) > 0.1 || Math.abs(panY) > 0.1)) {
+        panX *= 0.94;
+        panY *= 0.94;
+        if (Math.abs(panX) <= 0.1) panX = 0;
+        if (Math.abs(panY) <= 0.1) panY = 0;
+        updateCanvasPosition();
+        maxMotion = Math.max(maxMotion, Math.hypot(panX, panY));
+      }
+
       updateGraph();
+
+      if (!dragState && !panState && maxMotion < 0.04) {
+        idleFrames += 1;
+        if (idleFrames >= 14) {
+          simulationFrame = null;
+          return;
+        }
+      } else {
+        idleFrames = 0;
+      }
+
       simulationFrame = requestAnimationFrame(tick);
     };
-    cancelAnimationFrame(simulationFrame);
+
     simulationFrame = requestAnimationFrame(tick);
   };
 
@@ -229,12 +358,20 @@
       "text-anchor": "middle",
       class: "graph-node-label"
     });
-    splitLabel(node.label).forEach((line, index) => {
+    const lines = splitLabel(node.label);
+    lines.forEach((line, index) => {
       const span = createSvgElement("tspan", { x: node.x, dy: index ? 18 : 0 });
       span.textContent = line;
       label.append(span);
     });
     group.append(label);
+
+    const maxLineLength = Math.max(...lines.map((line) => line.length));
+    const estimatedLabelWidth = maxLineLength * 8.4;
+    const labelOffsetY = node.type === "project" ? 42 : node.id === "neural-networks" ? 48 : 39;
+    node.halfW = Math.max(radius + 16, estimatedLabelWidth / 2 + 16);
+    node.topExtent = radius + 16;
+    node.bottomExtent = labelOffsetY + (lines.length - 1) * 18 + 14;
 
     const title = createSvgElement("title");
     title.textContent = isProject ? `Project: ${node.label}` : `Topic: ${node.label}`;
@@ -254,19 +391,36 @@
     group.addEventListener("pointermove", (event) => {
       if (!dragState || dragState.node !== node) return;
       const position = pointerPosition(event);
-      node.x = Math.max(55, Math.min(945, position.x));
-      node.y = Math.max(55, Math.min(575, position.y));
+      node.x = Math.max(minBoundX, Math.min(maxBoundX, position.x));
+      node.y = Math.max(minBoundY, Math.min(maxBoundY, position.y));
       updateGraph();
+      startSimulation();
     });
-    group.addEventListener("pointerup", (event) => {
+    const finishNodeDrag = (event) => {
       if (!dragState || dragState.node !== node) return;
       dragState = null;
       group.classList.remove("is-dragging");
-      group.releasePointerCapture(event.pointerId);
-    });
+      if (group.hasPointerCapture(event.pointerId)) {
+        group.releasePointerCapture(event.pointerId);
+      }
+      startSimulation();
+    };
+    group.addEventListener("pointerup", finishNodeDrag);
+    group.addEventListener("pointercancel", finishNodeDrag);
 
     nodesLayer.append(group);
     nodeElements.set(node.id, group);
+
+    // Refine bounding box using actual rendered SVG text metrics when available
+    try {
+      const labelBox = label.getBBox();
+      if (labelBox && labelBox.width > 0) {
+        node.halfW = Math.max(radius + 18, labelBox.width / 2 + 16);
+        node.bottomExtent = Math.max(node.bottomExtent, labelBox.y + labelBox.height - node.y + 10);
+      }
+    } catch {
+      // Keep estimated label metrics if SVG is hidden during initial render
+    }
   }
 
   updateGraph();
@@ -293,10 +447,16 @@
     updateCanvasPosition();
   });
 
-  svg.addEventListener("pointerup", (event) => {
+  const finishPan = (event) => {
     if (!panState) return;
     panState = null;
     svg.classList.remove("is-panning");
-    svg.releasePointerCapture(event.pointerId);
-  });
+    if (svg.hasPointerCapture(event.pointerId)) {
+      svg.releasePointerCapture(event.pointerId);
+    }
+    startSimulation();
+  };
+
+  svg.addEventListener("pointerup", finishPan);
+  svg.addEventListener("pointercancel", finishPan);
 })();

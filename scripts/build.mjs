@@ -16,6 +16,125 @@ const escapeHtml = (value = "") =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+const PYTHON_KEYWORDS = new Set([
+  "and", "as", "assert", "async", "await", "break", "class", "continue",
+  "def", "del", "elif", "else", "except", "finally", "for", "from", "global",
+  "if", "import", "in", "is", "lambda", "nonlocal", "not", "or", "pass",
+  "raise", "return", "try", "while", "with", "yield"
+]);
+
+const PYTHON_CONSTANTS = new Set(["True", "False", "None"]);
+
+const PYTHON_BUILTINS = new Set([
+  "abs", "all", "any", "bool", "dict", "enumerate", "float", "int",
+  "isinstance", "len", "list", "map", "max", "min", "object", "print",
+  "range", "round", "set", "sorted", "str", "sum", "super", "tuple",
+  "type", "zip"
+]);
+
+const PYTHON_TOKEN_PATTERN =
+  /([rRbBuUfF]{0,2}(?:"""[\s\S]*?"""|'''[\s\S]*?'''))|([rRbBuUfF]{0,2}(?:"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'))|(#[^\n]*)|(\b(?:class|def)\b)(\s+)([A-Za-z_]\w*)|(\b\d+(?:\.\d+)?(?:[eE][+-]?\d+)?\b)|(\b[A-Za-z_]\w*\b)|(==|!=|<=|>=|\*\*|\/\/|\+=|-=|\*=|\/=|->|[=+\-*/@%<>])/g;
+
+function wrapToken(className, text) {
+  return `<span class="${className}">${escapeHtml(text)}</span>`;
+}
+
+function highlightPython(code) {
+  let result = "";
+  let lastIndex = 0;
+
+  for (const match of code.matchAll(PYTHON_TOKEN_PATTERN)) {
+    const startIndex = match.index;
+    const fullMatch = match[0];
+
+    if (startIndex > lastIndex) {
+      result += escapeHtml(code.slice(lastIndex, startIndex));
+    }
+
+    const [
+      ,
+      docstring,
+      stringLiteral,
+      comment,
+      declKeyword,
+      declSpace,
+      declName,
+      numberLiteral,
+      identifier,
+      operator
+    ] = match;
+
+    if (docstring) {
+      result += wrapToken("tok-docstring", docstring);
+    } else if (stringLiteral) {
+      result += wrapToken("tok-string", stringLiteral);
+    } else if (comment) {
+      result += wrapToken("tok-comment", comment);
+    } else if (declKeyword) {
+      const nameClass = declKeyword === "class" ? "tok-class" : "tok-function";
+      result +=
+        wrapToken("tok-keyword", declKeyword) +
+        escapeHtml(declSpace) +
+        wrapToken(nameClass, declName);
+    } else if (numberLiteral) {
+      result += wrapToken("tok-number", numberLiteral);
+    } else if (identifier) {
+      const nextChar = code[startIndex + fullMatch.length];
+      if (PYTHON_KEYWORDS.has(identifier)) {
+        result += wrapToken("tok-keyword", identifier);
+      } else if (PYTHON_CONSTANTS.has(identifier)) {
+        result += wrapToken("tok-constant", identifier);
+      } else if (identifier === "self" || identifier === "cls") {
+        result += wrapToken("tok-self", identifier);
+      } else if (PYTHON_BUILTINS.has(identifier)) {
+        result += wrapToken("tok-builtin", identifier);
+      } else if (/^[A-Z][A-Za-z0-9_]*[a-z][A-Za-z0-9_]*$/.test(identifier)) {
+        result += wrapToken("tok-class", identifier);
+      } else if (nextChar === "(") {
+        result += wrapToken("tok-call", identifier);
+      } else {
+        result += escapeHtml(identifier);
+      }
+    } else if (operator) {
+      const lineStart = code.lastIndexOf("\n", startIndex - 1) + 1;
+      const beforeOnLine = code.slice(lineStart, startIndex);
+      if (operator === "@" && /^\s*$/.test(beforeOnLine)) {
+        result += wrapToken("tok-decorator", operator);
+      } else {
+        result += wrapToken("tok-operator", operator);
+      }
+    } else {
+      result += escapeHtml(fullMatch);
+    }
+
+    lastIndex = startIndex + fullMatch.length;
+  }
+
+  if (lastIndex < code.length) {
+    result += escapeHtml(code.slice(lastIndex));
+  }
+
+  return result;
+}
+
+function highlightCode(code, language) {
+  if (language === "python" || language === "py") {
+    return highlightPython(code);
+  }
+  return escapeHtml(code);
+}
+
+marked.use({
+  renderer: {
+    code({ text, lang }) {
+      const language = (lang || "").trim().toLowerCase();
+      const className = language ? ` class="language-${escapeHtml(language)}"` : "";
+      const highlighted = highlightCode(text, language);
+      return `<pre><code${className}>${highlighted}\n</code></pre>\n`;
+    }
+  }
+});
+
 function parseFrontMatter(source, fileName) {
   const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
 

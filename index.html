@@ -20,24 +20,14 @@
   <main class="wrap home-minimal" id="main-content">
     <div class="home-split">
       <section class="home-personal" aria-label="About Huy">
-        <img class="home-avatar" src="assets/images/avt.jpg" alt="Portrait of Huy">
-        <p class="graph-eyebrow"> </span> Nghiem Quang Huy</p>
-        <h1 class="home-title">Student at HCMC University of Technology and Engineering.</h1>
-        <p class="home-subtitle">Sharing personal projects, implementations from scratch, and technical notes along the way.</p>
+        <img class="home-avatar" src="assets/images/avt.jpg" alt="Portrait of Nghiem Quang Huy">
+        <h1 class="home-name">Nghiem Quang Huy</h1>
+        <p class="home-role">Computer Science student at HCMC University of Technology and Engineering.</p>
+        <p class="home-welcome">Hello, what's up guys, welcome to my blog! I'll make sure my projects are actually freaking crazy!!</p>
       </section>
 
-      <section class="graph-panel home-graph-panel" aria-labelledby="home-graph-title">
-        <div class="graph-panel-header">
-          <h2 id="home-graph-title">Knowledge Graph</h2>
-          <div class="graph-legend" aria-label="Map legend">
-            <span><i class="graph-key graph-key-topic"></i>Topic</span>
-            <span><i class="graph-key graph-key-project"></i>Project</span>
-          </div>
-        </div>
-        <div class="graph-viewport" role="region" aria-label="Interactive knowledge graph" tabindex="0">
-          <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics and projects" viewBox="60 20 880 630" preserveAspectRatio="xMidYMid meet"></svg>
-        </div>
-        <p class="graph-hint">Hover to trace connections · Drag nodes to rearrange</p>
+      <section class="home-graph" aria-label="Knowledge Graph">
+        <svg id="knowledge-graph" role="group" aria-label="Interactive map of topics and projects" viewBox="60 10 880 640" preserveAspectRatio="xMidYMid meet"></svg>
       </section>
     </div>
 
@@ -57,16 +47,16 @@
   <script id="graph-data" type="application/json">
     {
       "nodes": [
-        {"id":"neural-networks","type":"topic","label":"Neural Networks","x":500,"y":110},
-        {"id":"computer-vision","type":"topic","label":"Computer Vision","x":230,"y":245},
-        {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":245},
-        {"id":"attention","type":"topic","label":"Attention","x":770,"y":245},
-        {"id":"memory","type":"topic","label":"Long-Term Memory","x":500,"y":360},
-        {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":170,"y":500,"url":"blog/shallow-nn-from-scratch.html"},
-        {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":390,"y":500,"url":"blog/rnn-from-scratch.html"},
-        {"id":"lstm","type":"project","label":"LSTM from Scratch","x":610,"y":500,"url":"blog/lstm-from-scratch.html"},
-        {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":830,"y":500,"url":"blog/self-attention-from-scratch.html"},
-        {"id":"vit","type":"project","label":"Vision Transformer","x":770,"y":590,"url":"blog/vision-transformer-from-scratch.html"}
+        {"id":"neural-networks","type":"topic","label":"Neural Networks","x":500,"y":120},
+        {"id":"computer-vision","type":"topic","label":"Computer Vision","x":280,"y":240},
+        {"id":"sequence-models","type":"topic","label":"Sequence Models","x":500,"y":260},
+        {"id":"attention","type":"topic","label":"Attention","x":720,"y":240},
+        {"id":"memory","type":"topic","label":"Long-Term Memory","x":420,"y":370},
+        {"id":"shallow-nn","type":"project","label":"Neural Network from Scratch","x":230,"y":420,"url":"blog/shallow-nn-from-scratch.html"},
+        {"id":"rnn","type":"project","label":"Recurrent Neural Network","x":370,"y":495,"url":"blog/rnn-from-scratch.html"},
+        {"id":"lstm","type":"project","label":"LSTM from Scratch","x":530,"y":505,"url":"blog/lstm-from-scratch.html"},
+        {"id":"self-attention","type":"project","label":"Self-Attention Mechanism","x":750,"y":400,"url":"blog/self-attention-from-scratch.html"},
+        {"id":"vit","type":"project","label":"Vision Transformer","x":680,"y":510,"url":"blog/vision-transformer-from-scratch.html"}
       ],
       "links": [
         {"source":"neural-networks","target":"computer-vision"},

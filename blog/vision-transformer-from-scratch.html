@@ -184,29 +184,29 @@
 
       <p>Let’s implement the two steps above in code. To do so, we’ll define a <code>PatchEmbeddings</code> class to handle splitting an input image and embedding it as vectors, based on a user-defined dictionary of variables called <code>config</code>:</p>
 
-      <pre><code class="language-python">class PatchEmbeddings(nn.Module):
-    &quot;&quot;&quot;
+      <pre><code class="language-python"><span class="tok-keyword">class</span> <span class="tok-class">PatchEmbeddings</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-docstring">&quot;&quot;&quot;
     Converts an input image into patches, then projects patches into embedded vectors.
-    &quot;&quot;&quot;
+    &quot;&quot;&quot;</span>
 
-    def __init__(self, config):
-        super().__init__()
-        self.image_size = config[&quot;image_size&quot;]
-        self.patch_size = config[&quot;patch_size&quot;]
-        self.num_channels = config[&quot;num_channels&quot;]
-        self.hidden_size = config[&quot;hidden_size&quot;]
-        self.num_patches = (self.image_size // self.patch_size) ** 2
-        self.projection = nn.Conv2d(
-            self.num_channels,
-            self.hidden_size,
-            kernel_size=self.patch_size,
-            stride=self.patch_size,
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, config):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.image_size <span class="tok-operator">=</span> config[<span class="tok-string">&quot;image_size&quot;</span>]
+        <span class="tok-self">self</span>.patch_size <span class="tok-operator">=</span> config[<span class="tok-string">&quot;patch_size&quot;</span>]
+        <span class="tok-self">self</span>.num_channels <span class="tok-operator">=</span> config[<span class="tok-string">&quot;num_channels&quot;</span>]
+        <span class="tok-self">self</span>.hidden_size <span class="tok-operator">=</span> config[<span class="tok-string">&quot;hidden_size&quot;</span>]
+        <span class="tok-self">self</span>.num_patches <span class="tok-operator">=</span> (<span class="tok-self">self</span>.image_size <span class="tok-operator">//</span> <span class="tok-self">self</span>.patch_size) <span class="tok-operator">**</span> <span class="tok-number">2</span>
+        <span class="tok-self">self</span>.projection <span class="tok-operator">=</span> nn.<span class="tok-class">Conv2d</span>(
+            <span class="tok-self">self</span>.num_channels,
+            <span class="tok-self">self</span>.hidden_size,
+            kernel_size<span class="tok-operator">=</span><span class="tok-self">self</span>.patch_size,
+            stride<span class="tok-operator">=</span><span class="tok-self">self</span>.patch_size,
         )
 
-    def forward(self, x):
-        x = self.projection(x)
-        x = x.flatten(2).transpose(1, 2)
-        return x
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, x):
+        x <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">projection</span>(x)
+        x <span class="tok-operator">=</span> x.<span class="tok-call">flatten</span>(<span class="tok-number">2</span>).<span class="tok-call">transpose</span>(<span class="tok-number">1</span>, <span class="tok-number">2</span>)
+        <span class="tok-keyword">return</span> x
 </code></pre>
       <p>Notice that we use the <code>nn.Conv2d()</code> convolution layer to do two things at once:</p>
 
@@ -230,7 +230,7 @@
 
       <h4 id="cls-token">3. Prepend a Trainable Class Embedding to the Set of Patch Embeddings</h4>
 
-      <p>One feature popularized in Transformer models like BERT is the use of a <code>[CLS]</code> (“classification”) token—a special token prepended to every input sequence.</p>
+      <p>One feature popularized in Transformer models like BERT is the use of a <code>[CLS]</code> (“classification”) token, a special token prepended to every input sequence.</p>
 
       <p>In BERT, the <code>[CLS]</code> token does not represent any word from the input; instead, it serves as a global representation of the entire sequence. After passing through multiple self-attention layers, its final embedding is used for classification.</p>
 
@@ -269,7 +269,7 @@
 
       <p>One big question I had when learning about this topic was: <em>why do we need to use learnable position embeddings specifically?</em></p>
 
-      <p>Earlier, we discussed why the model needs a spatial understanding of image patches. In the simplest case, if positional encodings were not learnable—for example, if they were hardcoded using the raw $(x, y)$ coordinates of each image patch—the model might struggle to generalize across different spatial arrangements. With rigid hardcoded positions, the network might not interpret “cat at top of image” and “cat at bottom of image” similarly, introducing rigid spatial biases about image patches.</p>
+      <p>Earlier, we discussed why the model needs a spatial understanding of image patches. In the simplest case, if positional encodings were not learnable, for example if they were hardcoded using the raw $(x, y)$ coordinates of each image patch, the model might struggle to generalize across different spatial arrangements. With rigid hardcoded positions, the network might not interpret “cat at top of image” and “cat at bottom of image” similarly, introducing rigid spatial biases about image patches.</p>
 
       <p>Instead, learnable position embeddings allow the model to flexibly adapt its spatial representation based on the data, helping it approximate a form of translational invariance.</p>
 
@@ -288,29 +288,29 @@
 
       <p>Let’s implement the two steps above in code by defining an <code>Embeddings</code> class that combines our patch embeddings with the <code>[CLS]</code> token and positional embeddings:</p>
 
-      <pre><code class="language-python">class Embeddings(nn.Module):
-    &quot;&quot;&quot;
+      <pre><code class="language-python"><span class="tok-keyword">class</span> <span class="tok-class">Embeddings</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-docstring">&quot;&quot;&quot;
     Combines original patch embeddings with [CLS] token and position embeddings.
-    &quot;&quot;&quot;
+    &quot;&quot;&quot;</span>
 
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.patch_embeddings = PatchEmbeddings(config)
-        self.cls_token = nn.Parameter(torch.randn(1, 1, config[&quot;hidden_size&quot;]))
-        self.position_embeddings = nn.Parameter(
-            torch.randn(1, self.patch_embeddings.num_patches + 1, config[&quot;hidden_size&quot;])
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, config):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.config <span class="tok-operator">=</span> config
+        <span class="tok-self">self</span>.patch_embeddings <span class="tok-operator">=</span> <span class="tok-class">PatchEmbeddings</span>(config)
+        <span class="tok-self">self</span>.cls_token <span class="tok-operator">=</span> nn.<span class="tok-class">Parameter</span>(torch.<span class="tok-call">randn</span>(<span class="tok-number">1</span>, <span class="tok-number">1</span>, config[<span class="tok-string">&quot;hidden_size&quot;</span>]))
+        <span class="tok-self">self</span>.position_embeddings <span class="tok-operator">=</span> nn.<span class="tok-class">Parameter</span>(
+            torch.<span class="tok-call">randn</span>(<span class="tok-number">1</span>, <span class="tok-self">self</span>.patch_embeddings.num_patches <span class="tok-operator">+</span> <span class="tok-number">1</span>, config[<span class="tok-string">&quot;hidden_size&quot;</span>])
         )
-        self.dropout = nn.Dropout(config[&quot;hidden_dropout_prob&quot;])
+        <span class="tok-self">self</span>.dropout <span class="tok-operator">=</span> nn.<span class="tok-class">Dropout</span>(config[<span class="tok-string">&quot;hidden_dropout_prob&quot;</span>])
 
-    def forward(self, x):
-        x = self.patch_embeddings(x)
-        batch_size, _, _ = x.size()
-        cls_tokens = self.cls_token.expand(batch_size, -1, -1)
-        x = torch.cat((cls_tokens, x), dim=1)
-        x = x + self.position_embeddings
-        x = self.dropout(x)
-        return x
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, x):
+        x <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">patch_embeddings</span>(x)
+        batch_size, _, _ <span class="tok-operator">=</span> x.<span class="tok-call">size</span>()
+        cls_tokens <span class="tok-operator">=</span> <span class="tok-self">self</span>.cls_token.<span class="tok-call">expand</span>(batch_size, <span class="tok-operator">-</span><span class="tok-number">1</span>, <span class="tok-operator">-</span><span class="tok-number">1</span>)
+        x <span class="tok-operator">=</span> torch.<span class="tok-call">cat</span>((cls_tokens, x), dim<span class="tok-operator">=</span><span class="tok-number">1</span>)
+        x <span class="tok-operator">=</span> x <span class="tok-operator">+</span> <span class="tok-self">self</span>.position_embeddings
+        x <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">dropout</span>(x)
+        <span class="tok-keyword">return</span> x
 </code></pre>
       <ul>
         <li>Notice that we initialize <code>self.cls_token</code> as a single learnable token with shape <code>(1, 1, hidden_size)</code>, representing <code>(batch dimension placeholder, one token, hidden_size)</code>.</li>
@@ -339,31 +339,31 @@
 
       <p>Let’s begin by implementing a single self-attention head first. Recall from our earlier Self-Attention project that an attention head takes a sequence of embeddings and computes the $K$, $Q$, and $V$ matrices:</p>
 
-      <pre><code class="language-python">class AttentionHead(nn.Module):
-    &quot;&quot;&quot;
+      <pre><code class="language-python"><span class="tok-keyword">class</span> <span class="tok-class">AttentionHead</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-docstring">&quot;&quot;&quot;
     Single attention head.
-    &quot;&quot;&quot;
+    &quot;&quot;&quot;</span>
 
-    def __init__(self, hidden_size, attention_head_size, dropout, bias=True):
-        super().__init__()
-        self.hidden_size = hidden_size
-        self.attention_head_size = attention_head_size
-        self.query = nn.Linear(hidden_size, attention_head_size, bias=bias)
-        self.key = nn.Linear(hidden_size, attention_head_size, bias=bias)
-        self.value = nn.Linear(hidden_size, attention_head_size, bias=bias)
-        self.dropout = nn.Dropout(dropout)
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, hidden_size, attention_head_size, dropout, bias<span class="tok-operator">=</span><span class="tok-constant">True</span>):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.hidden_size <span class="tok-operator">=</span> hidden_size
+        <span class="tok-self">self</span>.attention_head_size <span class="tok-operator">=</span> attention_head_size
+        <span class="tok-self">self</span>.query <span class="tok-operator">=</span> nn.<span class="tok-class">Linear</span>(hidden_size, attention_head_size, bias<span class="tok-operator">=</span>bias)
+        <span class="tok-self">self</span>.key <span class="tok-operator">=</span> nn.<span class="tok-class">Linear</span>(hidden_size, attention_head_size, bias<span class="tok-operator">=</span>bias)
+        <span class="tok-self">self</span>.value <span class="tok-operator">=</span> nn.<span class="tok-class">Linear</span>(hidden_size, attention_head_size, bias<span class="tok-operator">=</span>bias)
+        <span class="tok-self">self</span>.dropout <span class="tok-operator">=</span> nn.<span class="tok-class">Dropout</span>(dropout)
 
-    def forward(self, x):
-        query = self.query(x)
-        key = self.key(x)
-        value = self.value(x)
-        # Recall that Attention(Q, K, V) = softmax(Q K^T / sqrt(head_size)) V
-        attention_scores = torch.matmul(query, key.transpose(-1, -2))
-        attention_scores = attention_scores / math.sqrt(self.attention_head_size)
-        attention_probs = nn.functional.softmax(attention_scores, dim=-1)
-        attention_probs = self.dropout(attention_probs)
-        attention_output = torch.matmul(attention_probs, value)
-        return (attention_output, attention_probs)
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, x):
+        query <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">query</span>(x)
+        key <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">key</span>(x)
+        value <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">value</span>(x)
+        <span class="tok-comment"># Recall that Attention(Q, K, V) = softmax(Q K^T / sqrt(head_size)) V</span>
+        attention_scores <span class="tok-operator">=</span> torch.<span class="tok-call">matmul</span>(query, key.<span class="tok-call">transpose</span>(<span class="tok-operator">-</span><span class="tok-number">1</span>, <span class="tok-operator">-</span><span class="tok-number">2</span>))
+        attention_scores <span class="tok-operator">=</span> attention_scores <span class="tok-operator">/</span> math.<span class="tok-call">sqrt</span>(<span class="tok-self">self</span>.attention_head_size)
+        attention_probs <span class="tok-operator">=</span> nn.functional.<span class="tok-call">softmax</span>(attention_scores, dim<span class="tok-operator">=</span><span class="tok-operator">-</span><span class="tok-number">1</span>)
+        attention_probs <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">dropout</span>(attention_probs)
+        attention_output <span class="tok-operator">=</span> torch.<span class="tok-call">matmul</span>(attention_probs, value)
+        <span class="tok-keyword">return</span> (attention_output, attention_probs)
 </code></pre>
       <ul>
         <li>Note that <code>attention_head_size</code> defines the reduced dimensionality per attention head.</li>
@@ -374,47 +374,47 @@
 
       <p>Next, let’s implement the Multi-Head Attention module:</p>
 
-      <pre><code class="language-python">class MultiHeadAttention(nn.Module):
-    &quot;&quot;&quot;
+      <pre><code class="language-python"><span class="tok-keyword">class</span> <span class="tok-class">MultiHeadAttention</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-docstring">&quot;&quot;&quot;
     Multi-Head Attention module.
-    &quot;&quot;&quot;
+    &quot;&quot;&quot;</span>
 
-    def __init__(self, config):
-        super().__init__()
-        self.hidden_size = config[&quot;hidden_size&quot;]
-        self.num_attention_heads = config[&quot;num_attention_heads&quot;]
-        self.attention_head_size = self.hidden_size // self.num_attention_heads
-        self.all_head_size = self.attention_head_size * self.num_attention_heads
-        self.kqv_bias = config[&quot;kqv_bias&quot;]
-        self.heads = nn.ModuleList([])
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, config):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.hidden_size <span class="tok-operator">=</span> config[<span class="tok-string">&quot;hidden_size&quot;</span>]
+        <span class="tok-self">self</span>.num_attention_heads <span class="tok-operator">=</span> config[<span class="tok-string">&quot;num_attention_heads&quot;</span>]
+        <span class="tok-self">self</span>.attention_head_size <span class="tok-operator">=</span> <span class="tok-self">self</span>.hidden_size <span class="tok-operator">//</span> <span class="tok-self">self</span>.num_attention_heads
+        <span class="tok-self">self</span>.all_head_size <span class="tok-operator">=</span> <span class="tok-self">self</span>.attention_head_size <span class="tok-operator">*</span> <span class="tok-self">self</span>.num_attention_heads
+        <span class="tok-self">self</span>.kqv_bias <span class="tok-operator">=</span> config[<span class="tok-string">&quot;kqv_bias&quot;</span>]
+        <span class="tok-self">self</span>.heads <span class="tok-operator">=</span> nn.<span class="tok-class">ModuleList</span>([])
 
-        for _ in range(self.num_attention_heads):
-            head = AttentionHead(
-                self.hidden_size,
-                self.attention_head_size,
-                config[&quot;attention_probs_dropout_prob&quot;],
-                self.kqv_bias,
+        <span class="tok-keyword">for</span> _ <span class="tok-keyword">in</span> <span class="tok-builtin">range</span>(<span class="tok-self">self</span>.num_attention_heads):
+            head <span class="tok-operator">=</span> <span class="tok-class">AttentionHead</span>(
+                <span class="tok-self">self</span>.hidden_size,
+                <span class="tok-self">self</span>.attention_head_size,
+                config[<span class="tok-string">&quot;attention_probs_dropout_prob&quot;</span>],
+                <span class="tok-self">self</span>.kqv_bias,
             )
-            self.heads.append(head)
+            <span class="tok-self">self</span>.heads.<span class="tok-call">append</span>(head)
 
-        self.output_projection = nn.Linear(self.all_head_size, self.hidden_size)
-        self.output_dropout = nn.Dropout(config[&quot;hidden_dropout_prob&quot;])
+        <span class="tok-self">self</span>.output_projection <span class="tok-operator">=</span> nn.<span class="tok-class">Linear</span>(<span class="tok-self">self</span>.all_head_size, <span class="tok-self">self</span>.hidden_size)
+        <span class="tok-self">self</span>.output_dropout <span class="tok-operator">=</span> nn.<span class="tok-class">Dropout</span>(config[<span class="tok-string">&quot;hidden_dropout_prob&quot;</span>])
 
-    def forward(self, x, output_attentions=False):
-        attention_outputs = [head(x) for head in self.heads]
-        attention_output = torch.cat(
-            [attn_output for attn_output, _ in attention_outputs], dim=-1
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, x, output_attentions<span class="tok-operator">=</span><span class="tok-constant">False</span>):
+        attention_outputs <span class="tok-operator">=</span> [<span class="tok-call">head</span>(x) <span class="tok-keyword">for</span> head <span class="tok-keyword">in</span> <span class="tok-self">self</span>.heads]
+        attention_output <span class="tok-operator">=</span> torch.<span class="tok-call">cat</span>(
+            [attn_output <span class="tok-keyword">for</span> attn_output, _ <span class="tok-keyword">in</span> attention_outputs], dim<span class="tok-operator">=</span><span class="tok-operator">-</span><span class="tok-number">1</span>
         )
-        attention_output = self.output_projection(attention_output)
-        attention_output = self.output_dropout(attention_output)
+        attention_output <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">output_projection</span>(attention_output)
+        attention_output <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">output_dropout</span>(attention_output)
 
-        if not output_attentions:
-            return (attention_output, None)
-        else:
-            attention_probs = torch.stack(
-                [attn_probs for _, attn_probs in attention_outputs], dim=1
+        <span class="tok-keyword">if</span> <span class="tok-keyword">not</span> output_attentions:
+            <span class="tok-keyword">return</span> (attention_output, <span class="tok-constant">None</span>)
+        <span class="tok-keyword">else</span>:
+            attention_probs <span class="tok-operator">=</span> torch.<span class="tok-call">stack</span>(
+                [attn_probs <span class="tok-keyword">for</span> _, attn_probs <span class="tok-keyword">in</span> attention_outputs], dim<span class="tok-operator">=</span><span class="tok-number">1</span>
             )
-            return (attention_output, attention_probs)
+            <span class="tok-keyword">return</span> (attention_output, attention_probs)
 </code></pre>
       <ul>
         <li>Notice the seemingly redundant calculation for <code>attention_head_size</code> and <code>all_head_size</code>. Although <code>all_head_size</code> usually equals <code>hidden_size</code>, writing it this way keeps the implementation flexible if <code>hidden_size</code> is not evenly divisible or differs in custom configurations.</li>
@@ -427,81 +427,81 @@
 
       <p>For the MLP layer, we’ll build a two-layer feed-forward network with a GELU activation in between:</p>
 
-      <pre><code class="language-python">class MLP(nn.Module):
-    &quot;&quot;&quot;
+      <pre><code class="language-python"><span class="tok-keyword">class</span> <span class="tok-class">MLP</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-docstring">&quot;&quot;&quot;
     The Multi-Layer Perceptron module.
-    &quot;&quot;&quot;
+    &quot;&quot;&quot;</span>
 
-    def __init__(self, config):
-        super().__init__()
-        self.dense_1 = nn.Linear(config[&quot;hidden_size&quot;], config[&quot;intermediate_size&quot;])
-        self.activation = NewGELUActivation()
-        self.dense_2 = nn.Linear(config[&quot;intermediate_size&quot;], config[&quot;hidden_size&quot;])
-        self.dropout = nn.Dropout(config[&quot;hidden_dropout_prob&quot;])
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, config):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.dense_1 <span class="tok-operator">=</span> nn.<span class="tok-class">Linear</span>(config[<span class="tok-string">&quot;hidden_size&quot;</span>], config[<span class="tok-string">&quot;intermediate_size&quot;</span>])
+        <span class="tok-self">self</span>.activation <span class="tok-operator">=</span> <span class="tok-class">NewGELUActivation</span>()
+        <span class="tok-self">self</span>.dense_2 <span class="tok-operator">=</span> nn.<span class="tok-class">Linear</span>(config[<span class="tok-string">&quot;intermediate_size&quot;</span>], config[<span class="tok-string">&quot;hidden_size&quot;</span>])
+        <span class="tok-self">self</span>.dropout <span class="tok-operator">=</span> nn.<span class="tok-class">Dropout</span>(config[<span class="tok-string">&quot;hidden_dropout_prob&quot;</span>])
 
-    def forward(self, x):
-        x = self.dense_1(x)
-        x = self.activation(x)
-        x = self.dense_2(x)
-        x = self.dropout(x)
-        return x
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, x):
+        x <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">dense_1</span>(x)
+        x <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">activation</span>(x)
+        x <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">dense_2</span>(x)
+        x <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">dropout</span>(x)
+        <span class="tok-keyword">return</span> x
 </code></pre>
       <p>Now that we have implemented the Multi-Head Attention module and the MLP layer, we can combine them into a full Transformer layer with skip connections and layer normalization.</p>
 
       <p>We’ll call this class <code>Block</code>, since multiple Transformer layers (or blocks) are stacked sequentially to form the complete Transformer Encoder:</p>
 
-      <pre><code class="language-python">class Block(nn.Module):
-    &quot;&quot;&quot;
+      <pre><code class="language-python"><span class="tok-keyword">class</span> <span class="tok-class">Block</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-docstring">&quot;&quot;&quot;
     A single, full Transformer layer.
-    &quot;&quot;&quot;
+    &quot;&quot;&quot;</span>
 
-    def __init__(self, config):
-        super().__init__()
-        self.attention = MultiHeadAttention(config)
-        self.layernorm_1 = nn.LayerNorm(config[&quot;hidden_size&quot;])
-        self.mlp = MLP(config)
-        self.layernorm_2 = nn.LayerNorm(config[&quot;hidden_size&quot;])
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, config):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.attention <span class="tok-operator">=</span> <span class="tok-class">MultiHeadAttention</span>(config)
+        <span class="tok-self">self</span>.layernorm_1 <span class="tok-operator">=</span> nn.<span class="tok-class">LayerNorm</span>(config[<span class="tok-string">&quot;hidden_size&quot;</span>])
+        <span class="tok-self">self</span>.mlp <span class="tok-operator">=</span> <span class="tok-call">MLP</span>(config)
+        <span class="tok-self">self</span>.layernorm_2 <span class="tok-operator">=</span> nn.<span class="tok-class">LayerNorm</span>(config[<span class="tok-string">&quot;hidden_size&quot;</span>])
 
-    def forward(self, x, output_attentions=False):
-        attention_output, attention_probs = self.attention(
-            self.layernorm_1(x), output_attentions=output_attentions
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, x, output_attentions<span class="tok-operator">=</span><span class="tok-constant">False</span>):
+        attention_output, attention_probs <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">attention</span>(
+            <span class="tok-self">self</span>.<span class="tok-call">layernorm_1</span>(x), output_attentions<span class="tok-operator">=</span>output_attentions
         )
-        x = x + attention_output  # skip connection
-        mlp_output = self.mlp(self.layernorm_2(x))
-        x = x + mlp_output  # skip connection
+        x <span class="tok-operator">=</span> x <span class="tok-operator">+</span> attention_output  <span class="tok-comment"># skip connection</span>
+        mlp_output <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">mlp</span>(<span class="tok-self">self</span>.<span class="tok-call">layernorm_2</span>(x))
+        x <span class="tok-operator">=</span> x <span class="tok-operator">+</span> mlp_output  <span class="tok-comment"># skip connection</span>
 
-        if not output_attentions:
-            return (x, None)
-        else:
-            return (x, attention_probs)
+        <span class="tok-keyword">if</span> <span class="tok-keyword">not</span> output_attentions:
+            <span class="tok-keyword">return</span> (x, <span class="tok-constant">None</span>)
+        <span class="tok-keyword">else</span>:
+            <span class="tok-keyword">return</span> (x, attention_probs)
 </code></pre>
       <p>Finally, we’ll build the full Transformer Encoder, which stacks multiple Transformer blocks sequentially:</p>
 
-      <pre><code class="language-python">class Encoder(nn.Module):
-    &quot;&quot;&quot;
+      <pre><code class="language-python"><span class="tok-keyword">class</span> <span class="tok-class">Encoder</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-docstring">&quot;&quot;&quot;
     Transformer Encoder module.
-    &quot;&quot;&quot;
+    &quot;&quot;&quot;</span>
 
-    def __init__(self, config):
-        super().__init__()
-        self.blocks = nn.ModuleList([])
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, config):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.blocks <span class="tok-operator">=</span> nn.<span class="tok-class">ModuleList</span>([])
 
-        for _ in range(config[&quot;num_hidden_layers&quot;]):
-            block = Block(config)
-            self.blocks.append(block)
+        <span class="tok-keyword">for</span> _ <span class="tok-keyword">in</span> <span class="tok-builtin">range</span>(config[<span class="tok-string">&quot;num_hidden_layers&quot;</span>]):
+            block <span class="tok-operator">=</span> <span class="tok-class">Block</span>(config)
+            <span class="tok-self">self</span>.blocks.<span class="tok-call">append</span>(block)
 
-    def forward(self, x, output_attentions=False):
-        all_attentions = []
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, x, output_attentions<span class="tok-operator">=</span><span class="tok-constant">False</span>):
+        all_attentions <span class="tok-operator">=</span> []
 
-        for block in self.blocks:
-            x, attention_probs = block(x, output_attentions=output_attentions)
-            if output_attentions:
-                all_attentions.append(attention_probs)
+        <span class="tok-keyword">for</span> block <span class="tok-keyword">in</span> <span class="tok-self">self</span>.blocks:
+            x, attention_probs <span class="tok-operator">=</span> <span class="tok-call">block</span>(x, output_attentions<span class="tok-operator">=</span>output_attentions)
+            <span class="tok-keyword">if</span> output_attentions:
+                all_attentions.<span class="tok-call">append</span>(attention_probs)
 
-        if not output_attentions:
-            return (x, None)
-        else:
-            return (x, all_attentions)
+        <span class="tok-keyword">if</span> <span class="tok-keyword">not</span> output_attentions:
+            <span class="tok-keyword">return</span> (x, <span class="tok-constant">None</span>)
+        <span class="tok-keyword">else</span>:
+            <span class="tok-keyword">return</span> (x, all_attentions)
 </code></pre>
       <h3 id="classification">3.3 Do Image Classification with the CLS Token</h3>
 
@@ -512,60 +512,60 @@
         <figcaption>Figure 10. Feeding the final <code>[CLS]</code> token representation into the classification head to predict class logits.</figcaption>
       </figure>
 
-      <p>To turn these embeddings into useful predictions, we pass the <code>[CLS]</code> token embedding into a classification layer—a fully connected layer that takes the <code>[CLS]</code> embedding of size <code>hidden_size</code> and outputs logits for each image class.</p>
+      <p>To turn these embeddings into useful predictions, we pass the <code>[CLS]</code> token embedding into a classification layer, a fully connected layer that takes the <code>[CLS]</code> embedding of size <code>hidden_size</code> and outputs logits for each image class.</p>
 
       <p>Here’s the code implementation for the full ViT classifier model:</p>
 
-      <pre><code class="language-python">class ViTClassifier(nn.Module):
-    &quot;&quot;&quot;
+      <pre><code class="language-python"><span class="tok-keyword">class</span> <span class="tok-class">ViTClassifier</span>(nn.<span class="tok-class">Module</span>):
+    <span class="tok-docstring">&quot;&quot;&quot;
     The full ViT model for image classification.
-    &quot;&quot;&quot;
+    &quot;&quot;&quot;</span>
 
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        self.image_size = config[&quot;image_size&quot;]
-        self.hidden_size = config[&quot;hidden_size&quot;]
-        self.num_classes = config[&quot;num_classes&quot;]
-        self.embedding = Embeddings(config)
-        self.encoder = Encoder(config)
-        self.classifier = nn.Linear(self.hidden_size, self.num_classes)
-        self.apply(self._init_weights)
+    <span class="tok-keyword">def</span> <span class="tok-function">__init__</span>(<span class="tok-self">self</span>, config):
+        <span class="tok-builtin">super</span>().<span class="tok-call">__init__</span>()
+        <span class="tok-self">self</span>.config <span class="tok-operator">=</span> config
+        <span class="tok-self">self</span>.image_size <span class="tok-operator">=</span> config[<span class="tok-string">&quot;image_size&quot;</span>]
+        <span class="tok-self">self</span>.hidden_size <span class="tok-operator">=</span> config[<span class="tok-string">&quot;hidden_size&quot;</span>]
+        <span class="tok-self">self</span>.num_classes <span class="tok-operator">=</span> config[<span class="tok-string">&quot;num_classes&quot;</span>]
+        <span class="tok-self">self</span>.embedding <span class="tok-operator">=</span> <span class="tok-class">Embeddings</span>(config)
+        <span class="tok-self">self</span>.encoder <span class="tok-operator">=</span> <span class="tok-class">Encoder</span>(config)
+        <span class="tok-self">self</span>.classifier <span class="tok-operator">=</span> nn.<span class="tok-class">Linear</span>(<span class="tok-self">self</span>.hidden_size, <span class="tok-self">self</span>.num_classes)
+        <span class="tok-self">self</span>.<span class="tok-call">apply</span>(<span class="tok-self">self</span>._init_weights)
 
-    def forward(self, x, output_attentions=False):
-        embedding_output = self.embedding(x)
-        encoder_output, all_attentions = self.encoder(
-            embedding_output, output_attentions=output_attentions
+    <span class="tok-keyword">def</span> <span class="tok-function">forward</span>(<span class="tok-self">self</span>, x, output_attentions<span class="tok-operator">=</span><span class="tok-constant">False</span>):
+        embedding_output <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">embedding</span>(x)
+        encoder_output, all_attentions <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">encoder</span>(
+            embedding_output, output_attentions<span class="tok-operator">=</span>output_attentions
         )
-        logits = self.classifier(encoder_output[:, 0])
+        logits <span class="tok-operator">=</span> <span class="tok-self">self</span>.<span class="tok-call">classifier</span>(encoder_output[:, <span class="tok-number">0</span>])
 
-        if not output_attentions:
-            return (logits, None)
-        else:
-            return (logits, all_attentions)
+        <span class="tok-keyword">if</span> <span class="tok-keyword">not</span> output_attentions:
+            <span class="tok-keyword">return</span> (logits, <span class="tok-constant">None</span>)
+        <span class="tok-keyword">else</span>:
+            <span class="tok-keyword">return</span> (logits, all_attentions)
 
-    def _init_weights(self, module):
-        if isinstance(module, (nn.Linear, nn.Conv2d)):
-            torch.nn.init.normal_(
-                module.weight, mean=0.0, std=self.config[&quot;initializer_range&quot;]
+    <span class="tok-keyword">def</span> <span class="tok-function">_init_weights</span>(<span class="tok-self">self</span>, module):
+        <span class="tok-keyword">if</span> <span class="tok-builtin">isinstance</span>(module, (nn.<span class="tok-class">Linear</span>, nn.<span class="tok-class">Conv2d</span>)):
+            torch.nn.init.<span class="tok-call">normal_</span>(
+                module.weight, mean<span class="tok-operator">=</span><span class="tok-number">0.0</span>, std<span class="tok-operator">=</span><span class="tok-self">self</span>.config[<span class="tok-string">&quot;initializer_range&quot;</span>]
             )
-            if module.bias is not None:
-                torch.nn.init.zeros_(module.bias)
-        elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
-        elif isinstance(module, Embeddings):
-            module.position_embeddings.data = nn.init.trunc_normal_(
-                module.position_embeddings.data.to(torch.float32),
-                mean=0.0,
-                std=self.config[&quot;initializer_range&quot;],
-            ).to(module.position_embeddings.dtype)
+            <span class="tok-keyword">if</span> module.bias <span class="tok-keyword">is</span> <span class="tok-keyword">not</span> <span class="tok-constant">None</span>:
+                torch.nn.init.<span class="tok-call">zeros_</span>(module.bias)
+        <span class="tok-keyword">elif</span> <span class="tok-builtin">isinstance</span>(module, nn.<span class="tok-class">LayerNorm</span>):
+            module.bias.data.<span class="tok-call">zero_</span>()
+            module.weight.data.<span class="tok-call">fill_</span>(<span class="tok-number">1.0</span>)
+        <span class="tok-keyword">elif</span> <span class="tok-builtin">isinstance</span>(module, <span class="tok-class">Embeddings</span>):
+            module.position_embeddings.data <span class="tok-operator">=</span> nn.init.<span class="tok-call">trunc_normal_</span>(
+                module.position_embeddings.data.<span class="tok-call">to</span>(torch.float32),
+                mean<span class="tok-operator">=</span><span class="tok-number">0.0</span>,
+                std<span class="tok-operator">=</span><span class="tok-self">self</span>.config[<span class="tok-string">&quot;initializer_range&quot;</span>],
+            ).<span class="tok-call">to</span>(module.position_embeddings.dtype)
 
-            module.cls_token.data = nn.init.trunc_normal_(
-                module.cls_token.data.to(torch.float32),
-                mean=0.0,
-                std=self.config[&quot;initializer_range&quot;],
-            ).to(module.cls_token.dtype)
+            module.cls_token.data <span class="tok-operator">=</span> nn.init.<span class="tok-call">trunc_normal_</span>(
+                module.cls_token.data.<span class="tok-call">to</span>(torch.float32),
+                mean<span class="tok-operator">=</span><span class="tok-number">0.0</span>,
+                std<span class="tok-operator">=</span><span class="tok-self">self</span>.config[<span class="tok-string">&quot;initializer_range&quot;</span>],
+            ).<span class="tok-call">to</span>(module.cls_token.dtype)
 </code></pre>
       <p>Note that <code>_init_weights()</code> ensures all parameters start with reasonable values to avoid unstable training. Using PyTorch’s <code>self.apply()</code>, it inspects each module type and applies the appropriate parameter initialization across every layer of the model.</p>
 
