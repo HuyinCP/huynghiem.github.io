@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A geometric intuition for the Query, Key, and Value matrices in the Self-Attention mechanism.">
+  <title>Geometric Intuition Behind Self-Attention · Huy</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]]
+      },
+      svg: {
+        fontCache: "global"
+      }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <nav class="nav wrap" aria-label="Main navigation">
+    <a href="../index.html">Home</a>
+    <a href="../projects.html">Projects</a>
+    <a href="../blogs.html" aria-current="page">Technical Blog</a>
+    <a href="../travel.html">Travel</a>
+    <a href="../knowledge_graph.html">Knowledge Graph</a>
+  </nav>
+
+  <main class="wrap" id="main-content">
+    <article class="article">
+      <p class="article-back"><a href="../blogs.html">Technical Blog</a></p>
+
+      <header class="article-header">
+        <p class="graph-eyebrow">Technical Blog</p>
+        <h1>Geometric Intuition Behind Self-Attention</h1>
+        <p class="article-lead">Building a visual, geometric understanding of how the Key, Query, and Value matrices transform token embeddings.</p>
+      </header>
+
+      <p>This technical write-up explores how the scaled dot-product Self-Attention mechanism operates geometrically—how the $K$ and $Q$ projections align tokens in a shared similarity space, and how the $V$ projection produces context-aware representations.</p>
+
+      <p>Full notes and diagrams will be added here soon. In the meantime, you can read the accompanying code walkthrough in <a href="self-attention-from-scratch.html">Building the Self-Attention Mechanism from Scratch</a>.</p>
+    </article>
+  </main>
+</body>
+</html>
