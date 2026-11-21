@@ -10,8 +10,6 @@ back_label: Projects
 
 In this project, I build a Vision Transformer for image classification.
 
-<p class="article-published"><strong>Published</strong><br>08 March 2025</p>
-
 In this project, we’re going to implement a Vision Transformer (ViT) for image classification on the CIFAR-10 image dataset.
 
 Given that we’ve laid the theoretical foundation for the attention mechanism before, this will be more of a code-along post, with some theory guiding us along the way.
