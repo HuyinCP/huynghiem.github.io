@@ -3,6 +3,7 @@ title: Building Long Short-Term Memory (LSTM) from Scratch
 description: A PyTorch implementation of an LSTM language model compared with a recurrent neural network for sentence generation.
 lead: In this project, I build an LSTM-based model with PyTorch and compare its sentence-generation performance with the RNN model from an earlier project.
 date: Published 11 January 2025
+difficulty: 3
 output: blog/lstm-from-scratch.html
 back_url: ../projects.html
 back_label: Projects

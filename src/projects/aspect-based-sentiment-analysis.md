@@ -3,6 +3,7 @@ title: Aspect-Based Sentiment Analysis
 description: An introduction to fine-grained sentiment analysis for identifying aspect terms and predicting sentiment polarity.
 lead: An introduction to fine-grained sentiment analysis for identifying aspect terms and predicting sentiment polarity.
 date: 2026
+difficulty: 3
 output: blog/aspect-based-sentiment-analysis.html
 back_url: ../projects.html
 back_label: Projects

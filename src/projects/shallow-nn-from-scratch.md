@@ -3,6 +3,7 @@ title: Building a Neural Network from Scratch
 description: Building an image-classification neural network from scratch with NumPy.
 lead: In this project, I build an image-classification neural network using only NumPy and mathematics.
 date: 30 OCTOBER 2024
+difficulty: 2
 output: blog/shallow-nn-from-scratch.html
 back_url: ../projects.html
 back_label: Projects

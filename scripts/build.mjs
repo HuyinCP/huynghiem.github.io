@@ -188,12 +188,28 @@ function formatArticleContent(content) {
     .join("\n");
 }
 
+function renderDifficultyTag(rawDifficulty) {
+  const level = Number.parseInt(String(rawDifficulty || ""), 10);
+  if (!Number.isInteger(level) || level < 1 || level > 5) {
+    return "";
+  }
+
+  const filled = "★".repeat(level);
+  const empty = "☆".repeat(5 - level);
+  const emptyMarkup = empty
+    ? `<span class="difficulty-stars-empty">${empty}</span>`
+    : "";
+
+  return `\n        <div class="article-tags">\n          <span class="difficulty-tag" aria-label="Difficulty: ${level} out of 5 stars">\n            <span class="difficulty-label">Difficulty</span>\n            <span class="difficulty-stars" aria-hidden="true">${filled}${emptyMarkup}</span>\n          </span>\n        </div>`;
+}
+
 function applyLayout(layout, metadata, content) {
   const values = {
     title: escapeHtml(metadata.title),
     description: escapeHtml(metadata.description),
     lead: escapeHtml(metadata.lead),
     date: escapeHtml(metadata.date),
+    difficulty_tag: renderDifficultyTag(metadata.difficulty),
     back_url: escapeHtml(metadata.back_url || "../projects.html"),
     back_label: escapeHtml(metadata.back_label || "Projects"),
     content: formatArticleContent(content)

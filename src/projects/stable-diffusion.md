@@ -3,6 +3,7 @@ title: Stable Diffusion: Clearly Explained
 description: A complete lecture-style walkthrough of Stable Diffusion and Latent Diffusion Models, from generative modeling, Diffusion, CLIP, and VAE ELBO math to U-Net cross-attention and PyTorch implementation.
 lead: A step-by-step lecture walkthrough of how Stable Diffusion works, covering generative modeling, forward and reverse diffusion, Variational Autoencoders, CLIP text conditioning, cross-attention in U-Net, and PyTorch implementation.
 date: 2026
+difficulty: 5
 output: blog/stable-diffusion.html
 back_url: ../projects.html
 back_label: Projects

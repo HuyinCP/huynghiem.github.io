@@ -3,6 +3,7 @@ title: Project Title
 description: A short description used by search engines.
 lead: A one-sentence introduction displayed below the title.
 date: 16 OCTOBER 2026
+difficulty: 3
 output: blog/project-file-name.html
 back_url: ../projects.html
 back_label: Projects

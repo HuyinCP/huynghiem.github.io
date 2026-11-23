@@ -457,12 +457,14 @@ a:focus-visible {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(220px, 25vw, 310px);
+  grid-template-rows: auto auto 1fr;
   column-gap: clamp(28px, 4vw, 60px);
+  align-items: start;
   padding: 30px 4px;
   border-bottom: 1px solid var(--line);
 }
 
-.listing h2, .listing-date, .listing-description { grid-column: 1; }
+.listing h2, .listing-date, .listing-description, .listing-tags { grid-column: 1; }
 .listing > a:has(.project-image) { grid-column: 2; grid-row: 1 / span 3; align-self: center; }
 
 .listing h2 {
@@ -498,6 +500,51 @@ a:focus-visible {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.65;
+}
+
+.listing-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.article-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.difficulty-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 10px;
+  background: #faf7fd;
+  border: 1px solid #e9e3f1;
+  border-radius: 999px;
+  line-height: 1.4;
+}
+
+.difficulty-label {
+  color: #76668f;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.difficulty-stars {
+  color: #c88a2b;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.difficulty-stars-empty {
+  color: #d7d1e0;
 }
 
 .listing h2,
@@ -676,6 +723,52 @@ a:focus-visible {
   overflow-x: auto;
   overflow-y: hidden;
   margin: 20px 0;
+}
+
+.article-table-wrap {
+  overflow-x: auto;
+  margin: 24px 0;
+}
+
+.article table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #2b303b;
+}
+
+.article th,
+.article td {
+  padding: 9px 11px;
+  border-bottom: 1px solid #e6e3ec;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.article thead th {
+  background: #f8f7fb;
+  border-top: 1px solid #dcd7e6;
+  border-bottom: 1.5px solid #cfc8dc;
+  color: #2e2440;
+  font-weight: 700;
+}
+
+.article tbody tr:hover {
+  background: #faf9fc;
+}
+
+.article td.num,
+.article th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.article-table-caption {
+  margin: 8px 0 0;
+  color: #666;
+  font-size: 13px;
+  text-align: center;
 }
 
 .article mjx-container[display="true"] {

@@ -3,6 +3,7 @@ title: Building a Recurrent Neural Network (RNN) from Scratch
 description: Building a Recurrent Neural Network from scratch with NumPy.
 lead: In this project, I will build an RNN using only NumPy and use the model to generate text.
 date: 16 OCTOBER 2026
+difficulty: 3
 output: blog/rnn-from-scratch.html
 back_url: ../projects.html
 back_label: Projects
